@@ -21,34 +21,46 @@ public:
 	public:
 		MMNode* next = nullptr;
 		MMNode* prev = nullptr;
-		unsigned int size = 0;
-		unsigned int span = 0;
-		bool isDirty = true;
-		unsigned int pageId = 0;
 		K* keys;
 		V* values;
-		//MMNodeList list;
 		MMNode() {
 			keys = new K[N];
 			values = new V[N];
-			//for (int i = 0; i < N; i++) {
-				//*(keys + i) = nullptr;
-				//*(values + i) = nullptr;
-			//}
 		}
 	};
 
-	struct MMTreeNode {
+	class MMTreeNode {
+	public:
 		K cmin;
 		K cmax;
 		unsigned int span = 0;
-		unsigned int treeNodeCount = 0;
+		unsigned int size = 0;
 		MMNode* node = nullptr;
+		SparseNode<MMTreeNode>* parent = nullptr;
+		unsigned int dataId = -1;
+
+		void incrementParents(unsigned int count = 1) {
+			SparseNode<MMTreeNode>* cur = parent;
+			
+			//increment self and all parents up to root
+			while (cur != nullptr) {
+				cur->dataSpan += count;
+				cur = cur->parent;
+			}
+		}
+
+		void decrementParents(unsigned int count = 1) {
+			SparseNode<MMTreeNode>* cur = parent;
+			
+			//decrement self and all parents up to root
+			while (cur != nullptr) {
+				cur->dataSpan -= count;
+				cur = cur->parent;
+			}
+		}
 	};
 
-	std::vector<unsigned int> spans;
 
-	MMNode* root = null;
 	SparseBTree<MMTreeNode> nodes;
 	int pageCount = 0;
 	bool isAscending = false;
@@ -88,7 +100,8 @@ public:
 
 	std::vector<std::tuple<unsigned int, K, V>> range(K key, unsigned int count) {
 		
-		std::vector<std::tuple<unsigned int, K,V>> ranks(count);
+		std::vector<std::tuple<unsigned int, K, V>> ranks;
+		ranks.reserve(count);
 
 		//auto start = chrono::high_resolution_clock::now();
 
@@ -102,7 +115,7 @@ public:
 		MMNode* node = treeNode->node;
 		int rankPos = treeNode->span;
 		while (node != nullptr && ranks.size() < count) {
-			for (int i = 0; i < node->size; i++) {
+			for (int i = 0; i < treeNode->size; i++) {
 				K k = node->keys[i];
 				K v = node->values[i];
 				if (i > 0) {
@@ -132,7 +145,7 @@ public:
 
 	MMTreeNode* search(K key) {
 		MMTreeNode* current = nodes.search(key);
-		current->span = startingRank(current->node);
+		current->span = startingRank(current, key);
 		return current;
 	}
 
@@ -140,12 +153,50 @@ public:
 		nodes.traverse(key, itemViewer);
 	}
 
-	unsigned int startingRank(MMNode *node) {
+	unsigned int startingRank(MMTreeNode*treeNode, K key) {
 
 		unsigned int total = 0;
+			SparseNode<MMTreeNode>* current = treeNode->parent;
+			int childId = 0;
+			int prevChildId = current->childId;
 		if (isAscending) {
-			MMNode* cur = node->prev;
-			return cur->span;
+
+
+			// accumilate all parent and predecessor children counts
+			
+			int nodeCount = 0;
+			int childCount = 0;
+
+			while (current != nullptr) {
+				childId = current->childId;
+				if (childId == -1) {  //root node is never a child
+					childId = 0;
+				}
+				for (int i = 0; i < current->n; i++) {
+					
+					if (!current->leaf && prevChildId == 0 && i <= prevChildId ) {
+						total += current->children[i]->dataSpan;
+					}
+
+					if (current->data[i]->cmin >= key) break;
+
+					total += current->data[i]->size;
+					//if (i >= current->n) break;
+					/*if( !current->leaf && current->data[i] != treeNode)
+					total += current->children[i]->dataSpan;
+					if(i < current->n && current->data[i] != treeNode )
+					total += current->data[i]->size;*/
+					childCount++;
+				}
+				nodeCount++;
+				current = current->parent;
+				prevChildId = childId;
+			}
+
+			std::cout << "Node count: " << nodeCount << endl;
+			std::cout << "Child count: " << childCount << endl;
+
+			//return childId;
 
 			/*while (cur != nullptr) {
 
@@ -153,13 +204,52 @@ public:
 
 				cur = cur->prev;
 			}*/
-
-			
-
 		}
 		else {
-			MMNode* cur = node->prev;
-			return cur->span;
+			// accumilate all parent and predecessor children counts
+			SparseNode<MMTreeNode>* root;
+			int nodeCount = 0;
+			int childCount = 0;
+			while (current != nullptr) {
+				childId = current->childId;
+				if (childId == -1) {  //root node is never a child
+					childId = 0;
+				}
+				for (int i = 0; i < childId + 1; i++) {
+					if (i >= current->n) break;
+					if (!current->leaf)
+						total += current->children[i]->dataSpan;
+					if (current->data[i] != treeNode)
+						total += current->data[i]->size;
+					childCount++;
+				}
+				nodeCount++;
+				if (current->parent == nullptr) {
+					root = current;
+				}
+				current = current->parent;
+				
+			}
+
+			total = root->dataSpan - total;
+			//while (current != nullptr) {
+			//	childId = current->childId;
+			//	if (childId == -1) {  //root node is never a child
+			//		childId = 0;
+			//	}
+			//	for (int i = childId; i <= current->m; i++) {
+			//		if (!current->leaf && i <= current->n)
+			//			total += current->children[i]->dataSpan;
+			//		if (i < (current->n) && current->data[i] != treeNode)
+			//			total += current->data[i]->size;
+			//		childCount++;
+			//	}
+			//	nodeCount++;
+			//	current = current->parent;
+			//}
+			std::cout << "Node count: " << nodeCount << endl;
+			std::cout << "Child count: " << childCount << endl;
+			//return childId;
 			/*
 			while (cur != nullptr) {
 
@@ -167,8 +257,6 @@ public:
 
 				cur = cur->prev;
 			}*/
-			
-
 		}
 		
 		return total;
@@ -184,11 +272,7 @@ public:
 			newNode->cmin = key;
 			newNode->cmax = key;
 			newNode->node = new MMNode();
-			newNode->node->pageId = pageCount++;
-			if (pageCount == 1) {
-				root = newNode;
-			}
-			spans.push_back(newNode->node->size);
+			pageCount++;
 			nodes.insert(newNode);
 			insertKVToNode(newNode, key, value);
 			return newNode;
@@ -197,9 +281,9 @@ public:
 		insertKVToNode(current, key, value);
 
 		//reached capacity, split in half into two nodes
-		if (current->node->size >= m) {
+		if (current->size >= m) {
 			current = split(current);
-			nodes.insert(current);
+			
 		}
 		else {
 			updateMinMax(current);
@@ -207,15 +291,16 @@ public:
 		return current;
 	}
 
-	//split into two nodes, moving to the right
+	
+
+	// split into two nodes, moving to the right
 	MMTreeNode* split(MMTreeNode* left) {
 		MMTreeNode* right = new MMTreeNode();
 		right->node = new MMNode();
-		right->node->pageId = pageCount++;
-		spans.push_back(0);
+		pageCount++;
 
-		//keep (m*0.8) keys on left node
-		//move (m*0.2) keys on right node
+		// keep (m*0.8) keys on left node
+		// move (m*0.2) keys on right node
 		int j = 0;
 		for (int i = mSplit ; i < m; i++) {
 			
@@ -224,48 +309,59 @@ public:
 			j++;
 		}
 
-		//update sizes to match moved keys
-		left->node->size = mSplit;
-		right->node->size = m - mSplit;
+		// update sizes to match moved keys
+		left->size = mSplit;
+		right->size = m - mSplit;
 
-		//update new minmax of each
+		// update new minmax of each
 		updateMinMax(left);
 		updateMinMax(right);
-		spans[left->node->pageId] = left->node->size;
-		spans[right->node->pageId] = right->node->size;
 
-		//connect the nodes in doubly linked list
 
-		//old one connected with left, is now connected with right
+		//---------------------------
+		// connect the nodes in doubly linked list
+		//---------------------------
+		
+		// old one connected with left, is now connected with new right
 		MMNode* farRight = left->node->next;
 		if( farRight != nullptr )
 			farRight->prev = right->node;
 
-		//right is now connected in middle between left and far right
+		// right is now connected in middle between left and far right
 		right->node->next = farRight;
 		right->node->prev = left->node;
 
-		//left is connected to new right
+		// left is connected to new right
 		left->node->next = right->node;
+
+		//---------------------------
+		
+		
+		// add to the sparse tree
+		nodes.insert(right);
+
+		// update span counts 
+		left->decrementParents(m - mSplit);
+		right->incrementParents(m - mSplit);
 
 		return right;
 	}
 
 	MMTreeNode* updateMinMax(MMTreeNode* treeNode) {
 		MMNode* node = treeNode->node;
-		if (node->size <= 0) return treeNode;
+		if (treeNode->size <= 0) return treeNode;
 		//from -infinite to +infinite
 		if (isAscending) {
 			
 		treeNode->cmin = node->keys[0];
-		treeNode->cmax = node->keys[node->size -1];
+		treeNode->cmax = node->keys[treeNode->size -1];
 
 			
 		}
 		// from +infinite to -infinite
 		else {
 			treeNode->cmax = node->keys[0];
-			treeNode->cmin = node->keys[node->size - 1];
+			treeNode->cmin = node->keys[treeNode->size - 1];
 		}
 
 		return treeNode;
@@ -282,33 +378,6 @@ public:
 		}
 	}
 
-	void updateSpans(MMNode* node) {
-		unsigned int total = 0;
-		if (isAscending) {
-			MMNode* cur = node->prev;
-			
-			while (cur != nullptr) {
-				total += cur->size;
-
-				cur = cur->prev;
-			}
-
-
-
-		}
-		else {
-			MMNode* cur = node->prev;
-			
-			while (cur != nullptr) {
-
-				total += cur->size;
-
-				cur = cur->prev;
-			}
-
-
-		}
-	}
 
 	MMTreeNode* insertKVToNode(MMTreeNode* treeNode, K key, V value) {
 		MMNode* node = treeNode->node;
@@ -316,11 +385,11 @@ public:
 		int i;
 
 		//there are no items, insert immediately
-		if (node->size == 0) {
+		if (treeNode->size == 0) {
 			node->keys[0] = key;
 			node->values[0] = value;
-			node->size++;
-			
+			treeNode->size++;
+			treeNode->incrementParents(1);
 			return treeNode;
 		}
 
@@ -336,11 +405,11 @@ public:
 		//   attempt to calculate the predicted index, where key should be inserted
 		//   then loop direction forward or backward depending on the predicted index key vs the new key
 		//if (key >= node->keys[startPos]) {
-			for (i = 0; i < node->size; i++) {
+			for (i = 0; i < treeNode->size; i++) {
 				K nodeKey = node->keys[i];
 				if ((this->*sortFunc)(key, nodeKey)) {
-					mmShiftRight<K>(node->keys, i, node->size);
-					mmShiftRight<V>(node->values, i, node->size);
+					mmShiftRight<K>(node->keys, i, treeNode->size);
+					mmShiftRight<V>(node->values, i, treeNode->size);
 					break;
 				}
 			}
@@ -360,7 +429,8 @@ public:
 		
 		node->keys[i] = key;
 		node->values[i] = value;
-		node->size++;
+		treeNode->size++;
+		treeNode->incrementParents(1);
 
 		return treeNode;
 	}

@@ -32,8 +32,11 @@
         int n;                  // current number of keys
         int mmin;                // min no keys = ceil(m / 2) - 1
 
+        unsigned int dataSpan = 0;
+        unsigned int childSpan = 0;
         bool leaf;              // true if no children
-        SparseNode<T>* parent;
+        SparseNode<T>* parent = nullptr;
+        int childId = -1;
 
         SparseNode(int m, bool leaf = true)
             : m(m), mmin(ceil(m / 2.) - 1), leaf(leaf), n(0) {
@@ -57,6 +60,8 @@
                 // allocate space and assign
                 sparseShiftRight<T*>(data, i, n);
                 data[i] = element;
+                data[i]->parent = this;
+                data[i]->dataId = i;
 
                 if (n == m) {
                     // overflow
@@ -66,6 +71,8 @@
             else {
                 // pass down to child
                 SparseNode<T>* right = children[i]->insert(element, upshiftElement);
+                //children[i]->parent = this;
+                //children[i]->childId = i;
 
                 if (right) {
                     // overflow in child, returned min and right branch
@@ -73,11 +80,16 @@
                     // set data
                     sparseShiftRight<T*>(data, i, n);
                     data[i] = upshiftElement;
+                    data[i]->parent = this;
+                    data[i]->dataId = i;
+                    //data[i]->incrementParents(upshiftElement->size);
 
                     // add child
                     int _n = n;
                     sparseShiftRight<SparseNode<T>*>(children, i + 1, _n);
                     children[i + 1] = right;
+                    right->parent = this;
+                    right->childId = i + 1;
 
                     if (n == m) {
                         // too many elements
@@ -90,7 +102,55 @@
             return nullptr;
         }
 
-        T* search(int key, int nodeCnt = 0) {
+        SparseNode<T>* split(T*& upshiftElement) {
+            SparseNode<T>* right = new SparseNode<T>(m, leaf);
+            right->parent = parent;
+
+            unsigned int leftSpan = dataSpan;
+            unsigned int rightSpan = 0;
+
+            upshiftElement = data[mmin];
+            //upshiftElement->decrementParents(upshiftElement->size);
+            data[mmin] = nullptr;
+
+            //leftSpan -= upshiftElement->size;
+
+            
+
+
+            leftSpan -= rightSpan;
+            //dataSpan = leftSpan;
+            //right->dataSpan = rightSpan;
+
+
+            // data
+            for (int idx = mmin + 1; idx < n; idx++) {
+                //remove from left side tree
+                //data[idx]->decrementParents(data[idx]->size);
+
+                //update references
+                data[idx]->parent = right;
+                data[idx]->dataId = idx;
+                right->data[idx - mmin - 1] = data[idx];
+
+                //add size to right side tree
+                //data[idx]->incrementParents(data[idx]->size);
+                data[idx] = nullptr;
+
+                right->n++;
+            }
+            n -= right->n + 1;  // +1 to account for divisor
+
+            
+
+
+            //dataSpan = leftSpan;
+            //right->dataSpan = rightSpan;
+
+            return right;
+        }
+
+        T* search(int key) {
             int i = 0;
             if (n == 0) {
                 return nullptr;
@@ -98,27 +158,19 @@
             for (; i < n; i++) {
                 
                 if (key >= data[i]->cmin && key <= data[i]->cmax) {
-                    // found element
-                    //data[i]->span = span;
-
-                    //data[i]->treeNodeCount = nodeCnt;
                     return data[i];
                 }
                 if (!leaf && key < data[i]->cmin) {
-                    //nodeCnt++;
-                    return children[i]->search(key, nodeCnt);
+                    return children[i]->search(key);
                 }
             }
 
             // if key is greater than largest max
             //   return the node with highest max value
             if (leaf) {
-                //data[i - 1]->span = span;
-                //data[i - 1]->treeNodeCount = nodeCnt;
                 return data[i - 1];
             }
-            //nodeCnt++;
-            return children[i]->search(key, nodeCnt);
+            return children[i]->search(key);
         }
 
 
@@ -283,30 +335,7 @@
         }
 
     private:
-        SparseNode<T>* split(T*& upshiftElement) {
-            SparseNode<T>* right = new SparseNode<T>(m, leaf);
-
-            upshiftElement = data[mmin];
-            data[mmin] = nullptr;
-
-            // data
-            for (int idx = mmin + 1; idx < n; idx++) {
-                right->data[idx - mmin - 1] = data[idx];
-                data[idx] = nullptr;
-                right->n++;
-            }
-            n -= right->n + 1;  // +1 to account for divisor
-
-            // children
-            if (!leaf) {
-                for (int idx = mmin + 1; idx <= m; idx++) {
-                    right->children[idx - mmin - 1] = children[idx];
-                    children[idx] = nullptr;
-                }
-            }
-
-            return right;
-        }
+        
 
         T* getPredecessor(int idx) {
             SparseNode<T>* current = children[idx];
@@ -443,13 +472,23 @@
                 // need to create new root
                 SparseNode<T>* newRoot = new SparseNode<T>(m, false);
 
-                // set data
-                newRoot->data[0] = upshiftElement;
-                newRoot->n = 1;
+                
 
                 // set children
                 newRoot->children[0] = root;
                 newRoot->children[1] = right;
+                root->parent = newRoot;
+                right->parent = newRoot;
+                root->childId = 0;
+                right->childId = 1;
+
+                // set data
+                newRoot->data[0] = upshiftElement;
+                newRoot->n = 1;
+                //upshiftElement->incrementParents(upshiftElement->size);
+
+                newRoot->dataSpan = root->dataSpan + right->dataSpan;
+
 
                 // reset root in class
                 root = newRoot;

@@ -14,8 +14,8 @@
 #include "db/datastructures/Base62.h"
 #include "db/datastructures/BTree.h"
 
-#include "db/datastructures/MinMaxSort.h"
-
+//#include "db/datastructures/MinMaxSort.h"
+#include "db/datastructures/RecursiveMinMax.h"
 
 using namespace std;
 //#include "fc/btree.h"
@@ -46,48 +46,72 @@ int main()
 		//std::uniform_int_distribution<int> uni(1, 10000000); // Guaranteed unbiased
 
 
-		typedef MinMaxSort<unsigned int, int, 256> MMSort;
+		//typedef MinMaxSort<unsigned int, int, 128> MMSort;
 
-		MMSort minmax(true);
+		typedef RecursiveMinMax<unsigned int, int, 128, true> MMSort;
+
+		MMSort minmax;
 
 		//unsigned int firstValue = 100000;
-		unsigned int score = 1;
-		for (int i = 1; i <= 1000000; i++) {
+		//unsigned int score = 10000;
+		unsigned int insertTotal = 10000;
+		for (int i = 1; i <= insertTotal; i++) {
 			/*if (i == 1) {
 			firstValue = dist6(rng);
 			minmax.insert(firstValue, i);
 			}
 			else {*/
-			if (i % 2 == 0) {
-				score++;
-			}
+			//if (i % 2 == 0) {
+				//score++;
+			//}
 				//minmax.insert((unsigned int)dist6(rng), i);
 			//}
-			minmax.insert(score, i);
+			minmax.insert(i, i);
 		}
 
 		auto finish = chrono::high_resolution_clock::now();
-		cout << "Insert 10,000,000 MinMax : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
+		cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 		start = chrono::high_resolution_clock::now();
 
-		int findValue = 50000;
-		int findCount = 100;
+		int findValue = 16000;
+		int findCount = 10;
 
-		for (int j=0; j < 1000; j++) {
-			std::vector<std::tuple<unsigned int, unsigned int,int>> ranks = minmax.range(findValue, findCount);
+		MMSort::MMNode* bestNode = minmax.searchBestNode(1);
+		if (bestNode) {
+			for (int i = 0; i < bestNode->size; i++) {
+				MMSort::MMKey* kv = bestNode->data[i];
+				if (kv) {
+					cout << "Key [" << kv->key << "] = " << kv->value << endl;
+				}
+			}
+		}
+
+		MMSort::MMNode* root = minmax.root;
+
+		if (root) {
+			//for (int i = 0; i < bestNode->size; i++) {
+				//MMSort::MMNode* node = bestNode->data[i];
+				//if (kv) {
+					cout << "Min " << root->cmin << ", Max " << root->cmax << endl;
+				//}
+			//}
+		}
+
+		//for (int j=0; j < 1000; j++) {
+		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks;// = minmax.range(findValue, findCount);
 
 			for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
-				/*cout << "Rank [" 
+				cout << "Rank [" 
 					<< std::get<0>(rank) 
 					<< "]: score="
 					<< std::get<1>(rank)
 					<< ": value="
 					<< std::get<2>(rank)
-					<< endl;*/
+					<< endl;
 			}
 
-		}
+		//}
 
 		//minmax.traverse(findValue, [](MMSort::MMTreeNode* element) -> void {
 		//	totalTreeNodes++;// += element->node->size;
