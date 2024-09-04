@@ -41,20 +41,20 @@ int main()
 	{
 		auto start = chrono::high_resolution_clock::now();
 
-		//std::random_device rd;     // Only used once to initialise (seed) engine
-		//std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
-		//std::uniform_int_distribution<int> uni(1, 10000000); // Guaranteed unbiased
+		std::random_device rd;     // Only used once to initialise (seed) engine
+		std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
+		std::uniform_int_distribution<int> uni(1, 10000000); // Guaranteed unbiased
 
 
 		//typedef MinMaxSort<unsigned int, int, 128> MMSort;
 
-		typedef RecursiveMinMax<unsigned int, int, 128, true> MMSort;
+		typedef RecursiveMinMax<unsigned int, int, 4, true> MMSort;
 
 		MMSort minmax;
 
 		//unsigned int firstValue = 100000;
 		//unsigned int score = 10000;
-		unsigned int insertTotal = 10000;
+		unsigned int insertTotal = 20;
 		for (int i = 1; i <= insertTotal; i++) {
 			/*if (i == 1) {
 			firstValue = dist6(rng);
@@ -66,8 +66,17 @@ int main()
 			//}
 				//minmax.insert((unsigned int)dist6(rng), i);
 			//}
+			//unsigned int rkey = dist6(rng);
+			cout << "-------------------- " << i << ":"  << " ----- " << endl;
 			minmax.insert(i, i);
+			minmax.display(nullptr);
 		}
+
+		/*for (int i = 1; i <= 5; i++) {
+			cout << "-------------------- " << insertTotal+i << " ----- " << endl;
+			minmax.insert(5, 5);
+			minmax.display(nullptr);
+		}*/
 
 		auto finish = chrono::high_resolution_clock::now();
 		cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
@@ -77,7 +86,7 @@ int main()
 		int findValue = 16000;
 		int findCount = 10;
 
-		MMSort::MMNode* bestNode = minmax.searchBestNode(1);
+		/*MMSort::MMNode* bestNode = minmax.searchBestNode(1);
 		if (bestNode) {
 			for (int i = 0; i < bestNode->size; i++) {
 				MMSort::MMKey* kv = bestNode->data[i];
@@ -85,17 +94,11 @@ int main()
 					cout << "Key [" << kv->key << "] = " << kv->value << endl;
 				}
 			}
-		}
+		}*/
 
 		MMSort::MMNode* root = minmax.root;
-
 		if (root) {
-			//for (int i = 0; i < bestNode->size; i++) {
-				//MMSort::MMNode* node = bestNode->data[i];
-				//if (kv) {
-					cout << "Min " << root->cmin << ", Max " << root->cmax << endl;
-				//}
-			//}
+			minmax.display(nullptr);
 		}
 
 		//for (int j=0; j < 1000; j++) {
