@@ -54,7 +54,7 @@ int main()
 
 		//unsigned int firstValue = 100000;
 		//unsigned int score = 10000;
-		unsigned int insertTotal = 20;
+		unsigned int insertTotal = 8;
 		for (int i = 1; i <= insertTotal; i++) {
 			/*if (i == 1) {
 			firstValue = dist6(rng);
@@ -83,8 +83,8 @@ int main()
 
 		start = chrono::high_resolution_clock::now();
 
-		int findValue = 16000;
-		int findCount = 10;
+		int findValue = 10;
+		int findCount = 20;
 
 		/*MMSort::MMNode* bestNode = minmax.searchBestNode(1);
 		if (bestNode) {
@@ -102,7 +102,7 @@ int main()
 		}
 
 		//for (int j=0; j < 1000; j++) {
-		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks;// = minmax.range(findValue, findCount);
+		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
 
 			for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
 				cout << "Rank [" 

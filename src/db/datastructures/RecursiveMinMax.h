@@ -32,8 +32,8 @@ public:
 
 	class MMNode {
 	public:
-		K cmin;
-		K cmax;
+		K cmin = 0;
+		K cmax = 0;
 
 		//linked list nodes
 		MMNode* nextNode = nullptr;
@@ -75,56 +75,7 @@ public:
 
 		}
 
-		MMNode* range(K key, unsigned int count, int offset=0) {
-
-			MMNode* nearest = search(key);
-			std::vector<std::tuple<unsigned int, K, V>> ranks;
-			ranks.reserve(count);
-			int i = 0;
-			for (; i < nearest->size; i++) {
-				if (key < nearest->data[i]->key) {
-					break;
-				}
-			}
-
-			/*if (offset < 0) {
-				int start = i;
-				for (; start < i+offset ; start--) {
-					start--;
-					if( start < 0)
-				}
-			}
-			else if(offset > 0) {
-
-			}*/
-			
-			/*MMNode* node = this;
-			int rankPos = treeNode->span;
-			while (node != nullptr && ranks.size() < count) {
-				for (int i = 0; i < treeNode->size; i++) {
-					K k = node->keys[i];
-					K v = node->values[i];
-					if (i > 0) {
-						K prevK = node->keys[i - 1];
-						if (prevK != k) {
-							rankPos++;
-						}
-					}
-					else {
-						rankPos++;
-					}
-					if (!(this->*sortFunc)(key, node->keys[i]))
-						continue;
-
-					ranks.push_back({ rankPos, k, v });
-
-					if (ranks.size() >= count) break;
-				}
-				node = node->next;
-			}*/
-
-
-		}
+		
 
 		MMNode* search(K key, unsigned int count =0) {
 			if (chsize > 0) {
@@ -162,7 +113,85 @@ public:
 
 		
 
-		MMNode *insertLeaf(K key, V value) {
+		
+
+		void updateMinMaxLeaf() {
+			if (size <= 0) return;
+			//from -infinite to +infinite
+			if (ASC) {
+				cmin = data[0]->key;
+				cmax = data[size - 1]->key;
+
+				if( parent != nullptr )
+					parent->updateMinMaxNode();
+				
+			}
+			// from +infinite to -infinite
+			else {
+				cmax = data[0]->key;
+				cmin = data[size - 1]->key;
+			}
+		}
+		MMNode* splitLeaf() {
+
+			MMNode* right = new MMNode(true);
+			
+			for (int i = nsplit, j=0; i < size; i++) {
+				
+				right->data[j++] = data[i];
+			}
+
+			//remove count entirely from parent tree
+			MMNode* cur = this;
+		
+			// update sizes to match moved keys
+			size = nsplit;
+			right->size = N - nsplit;
+			//right->parent = parent;
+
+			//span -= N - nsplit;
+			decrementSpan(N - nsplit);
+
+			updateMinMaxLeaf();
+			right->updateMinMaxLeaf();
+			
+			//right->incrementSpan(right->size);
+			//incrementSpan(N - nsplit);
+
+			// old one connected with left, is now connected with new right
+			MMNode* farRight = nextNode;
+			if (farRight != nullptr)
+				farRight->prevNode = right;
+
+			// right is now connected in middle between left and far right
+			right->nextNode = farRight;
+			right->prevNode = this;
+
+			// left is connected to new right
+			nextNode = right;
+
+			if (parent == nullptr) {
+				//decrementSpan(N - nsplit);
+
+				MMNode* newRoot = new MMNode(false);
+				newRoot->insertNode(this);
+				newRoot->insertNode(right);
+
+				//incrementSpan(N - nsplit);
+				//newRoot->incrementSpan(right->span + span);
+				newRoot->incrementSpan(N - nsplit);
+				right->incrementSpan(right->size);
+			
+				return newRoot;
+			}
+			else {
+				parent->insertNode(right);
+				//right->span = right->size;
+				right->incrementSpan(right->size);
+			}
+		}
+
+		MMNode* insertLeaf(K key, V value) {
 			//first kv or greater than entire list
 			if (size == 0 || key >= data[size - 1]->key) {
 				data[size] = new MMKey(key, value);
@@ -204,79 +233,6 @@ public:
 			}
 			return nullptr;
 		}
-
-		void updateMinMaxLeaf() {
-			if (size <= 0) return;
-			//from -infinite to +infinite
-			if (ASC) {
-				cmin = data[0]->key;
-				cmax = data[size - 1]->key;
-
-				if( parent != nullptr )
-					parent->updateMinMaxNode();
-				
-			}
-			// from +infinite to -infinite
-			else {
-				cmax = data[0]->key;
-				cmin = data[size - 1]->key;
-			}
-		}
-		MMNode* splitLeaf() {
-
-			MMNode* right = new MMNode(true);
-
-			for (int i = nsplit, j=0; i < N; i++) {
-				right->data[j++] = data[i];
-			}
-
-			//remove count entirely from parent tree
-			MMNode* cur = this;
-		
-			// update sizes to match moved keys
-			size = nsplit;
-			right->size = N - nsplit;
-			//right->parent = parent;
-
-			decrementSpan(N - nsplit);
-
-			updateMinMaxLeaf();
-			right->updateMinMaxLeaf();
-			
-			//right->incrementSpan(right->size);
-			//incrementSpan(N - nsplit);
-
-			// old one connected with left, is now connected with new right
-			MMNode* farRight = nextNode;
-			if (farRight != nullptr)
-				farRight->prevNode = right;
-
-			// right is now connected in middle between left and far right
-			right->nextNode = farRight;
-			right->prevNode = this;
-
-			// left is connected to new right
-			nextNode = right;
-
-			if (parent == nullptr) {
-				//decrementSpan(N - nsplit);
-
-				MMNode* newRoot = new MMNode(false);
-				newRoot->insertNode(this);
-				newRoot->insertNode(right);
-
-				//incrementSpan(N - nsplit);
-				newRoot->incrementSpan(right->span + span);
-				right->incrementSpan(right->size);
-			
-				return newRoot;
-			}
-			else {
-				parent->insertNode(right);
-				right->incrementSpan(right->size);
-			}
-		}
-
 
 		MMNode* insertNode(MMNode* node) {
 
@@ -356,12 +312,13 @@ public:
 		MMNode* splitNode() {
 
 			MMNode* right = new MMNode(false);
-
+			unsigned int spanMove = 0;
 			int j = 0;
-			for (int i = nsplit; i < N; i++) {
+			for (int i = nsplit; i < chsize; i++) {
 				right->children[j] = children[i];
 				right->children[j]->childId = j;
 				right->children[j]->parent = right;
+				spanMove += children[i]->span;
 				j++;
 			}
 
@@ -369,9 +326,9 @@ public:
 			chsize = nsplit;
 			right->chsize = N - nsplit;
 
-			//decrementSpan(size);
+			decrementSpan(spanMove);
 
-			right->parent = parent;
+			//right->parent = parent;
 			updateMinMaxNode();
 			right->updateMinMaxNode();
 
@@ -383,17 +340,24 @@ public:
 				newRoot->insertNode(this);
 				newRoot->insertNode(right);
 
-				newRoot->incrementSpan(right->span);
+				//newRoot->incrementSpan(right->span + span);
 
-				//right->parent->incrementSpan(right->span);
-				//newRoot->incrementSpan(size);
+				right->incrementSpan(spanMove);
+				newRoot->incrementSpan(span);
 				//incrementSpan(size);
 				//right->incrementSpan(right->size);
 				//newRoot->updateMinMaxNode();
 				return newRoot;
 			}
-			else 
+			else {
 				parent->insertNode(right);
+				//parent->decrementSpan(spanMove);
+
+				right->incrementSpan(spanMove);
+				
+				//right->incrementSpan(right->span);
+				//right->incrementSpan(right->span);
+			}
 			
 		}
 
@@ -466,12 +430,79 @@ public:
 					//cout << std::string(depth, '\t') << "\tKey["<<i<<"] = " << next->data[i]->key << endl;
 				//}
 				//else {
-				if( i < next->chsize )
+				//if( i < next->chsize )
 					display(next->children[i], depth+1);
 				//}
 					
 				
 			}
+
+	}
+
+	std::vector<std::tuple<unsigned int, K, V>> range(K key, unsigned int count, int offset = 0) {
+
+		MMNode* nearest = root->search(key);
+		std::vector<std::tuple<unsigned int, K, V>> ranks;
+		ranks.reserve(count);
+		if (nearest == nullptr) return ranks;
+
+		int i = 0;
+		for (; i < nearest->size; i++) {
+			if (key < nearest->data[i]->key) {
+				break;
+			}
+		}
+
+		int absOffset = abs(offset);
+		int startPos = i;
+		MMNode* cur = nearest;
+		while (absOffset > 0 && cur != nullptr) {
+
+			if (offset > 0)
+				startPos++;
+			else if (offset < 0)
+				startPos--;
+			absOffset--;
+
+			cur = cur->prevNode;
+
+			//start at end of previous node
+			if (startPos < 0 && cur != nullptr) {
+				startPos = cur->size - 1;
+			}
+
+			//start at beggining of next node
+			if (startPos >= cur->size && cur != nullptr) {
+				startPos = 0;
+			}
+		}
+
+		MMNode* node = nearest;
+		int rankPos = nearest->tempspan;
+		while (node != nullptr && ranks.size() < count) {
+			for (int i = 0; i < node->size; i++) {
+				K k = node->data[i]->key;
+				V v = node->data[i]->value;
+				if (i > 0) {
+					K prevK = node->data[i - 1]->key;
+					if (prevK != k) {
+						rankPos++;
+					}
+				}
+				else {
+					rankPos++;
+				}
+				if (key > node->data[i]->key)//!(this->*sortFunc)(key, node->data[i]->key))
+					continue;
+
+				ranks.push_back({ rankPos, k, v });
+
+				if (ranks.size() >= count) break;
+			}
+			node = node->nextNode;
+		}
+
+		return ranks;
 
 	}
 
@@ -496,9 +527,11 @@ public:
 		
 		MMNode *newRoot = root->insert(key, value);
 
-		if (newRoot) {
+		if (newRoot != nullptr) {
+			while (newRoot->parent != nullptr) {
+				newRoot = newRoot->parent;
+			}
 			root = newRoot;
-
 		}
 
 		return newRoot;
