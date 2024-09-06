@@ -85,6 +85,7 @@ public:
 				int i;
 				//for (i = chsize - 1; i >= 0; i--) {
 				for (i = 0; i < chsize; i++) {
+					
 					if (key >= children[i]->cmin && key <= children[i]->cmax) {
 						return children[i]->search(key, count);
 					}
@@ -92,6 +93,8 @@ public:
 				}
 				if (key >= children[chsize - 1]->cmax)
 					return children[chsize - 1]->search(key, count);
+				if (key < children[0]->cmin)
+					return children[0]->search(key, count);
 			}
 
 			tempspan = count;
@@ -249,7 +252,7 @@ public:
 			//find index where key is less, insert into index and shift to right
 			for (int i = chsize -1; i >= 0; i--) {
 
-				if (node->cmin <= children[i]->cmax) {
+				if ((i > 0 && node->cmin > children[i-1]->cmax) && node->cmin <= children[i]->cmax) {
 					mmShiftRight<MMNode*>(children, i, chsize);
 					children[i] = node;
 					node->childId = i;
@@ -464,23 +467,30 @@ public:
 				startPos--;
 			absOffset--;
 
-			cur = cur->prevNode;
+			
 
 			//start at end of previous node
-			if (startPos < 0 && cur != nullptr) {
-				startPos = cur->size - 1;
+			if (startPos < 0) {
+				cur = cur->prevNode;
+				if (cur != nullptr)
+					startPos = cur->size - 1;
+				else
+					break;
 			}
 
 			//start at beggining of next node
-			if (startPos >= cur->size && cur != nullptr) {
-				startPos = 0;
+			if (startPos >= cur->size) {
+				cur = cur->nextNode;
+				if (cur != nullptr)
+					startPos = 0;
+				else break;
 			}
 		}
 
-		MMNode* node = nearest;
-		int rankPos = nearest->tempspan;
+		MMNode* node = cur;
+		int rankPos = cur->tempspan + offset;
 		while (node != nullptr && ranks.size() < count) {
-			for (int i = 0; i < node->size; i++) {
+			for (int i = startPos; i < node->size; i++) {
 				K k = node->data[i]->key;
 				V v = node->data[i]->value;
 				if (i > 0) {
@@ -500,6 +510,7 @@ public:
 				if (ranks.size() >= count) break;
 			}
 			node = node->nextNode;
+			startPos = 0;
 		}
 
 		return ranks;
@@ -527,14 +538,14 @@ public:
 		
 		MMNode *newRoot = root->insert(key, value);
 
-		if (newRoot != nullptr) {
-			while (newRoot->parent != nullptr) {
-				newRoot = newRoot->parent;
+		if (root != nullptr) {
+			while (root->parent != nullptr) {
+				root = root->parent;
 			}
-			root = newRoot;
+			//root = newRoot;
 		}
 
-		return newRoot;
+		return root;
 	}
 
 	

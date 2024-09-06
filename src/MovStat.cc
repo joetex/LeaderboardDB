@@ -48,14 +48,15 @@ int main()
 
 		//typedef MinMaxSort<unsigned int, int, 128> MMSort;
 
-		typedef RecursiveMinMax<unsigned int, int, 4, true> MMSort;
+		typedef RecursiveMinMax<unsigned int, int, 128, true> MMSort;
 
 		MMSort minmax;
 
 		//unsigned int firstValue = 100000;
 		//unsigned int score = 10000;
-		unsigned int insertTotal = 8;
-		for (int i = 1; i <= insertTotal; i++) {
+		unsigned int insertTotal = 10000000;
+		//for (int i = 1; i <= insertTotal; i++) {
+		for (int i = insertTotal; i > 0; i--) {
 			/*if (i == 1) {
 			firstValue = dist6(rng);
 			minmax.insert(firstValue, i);
@@ -67,9 +68,9 @@ int main()
 				//minmax.insert((unsigned int)dist6(rng), i);
 			//}
 			//unsigned int rkey = dist6(rng);
-			cout << "-------------------- " << i << ":"  << " ----- " << endl;
+			//cout << "-------------------- " << i << ":"  << " ----- " << endl;
 			minmax.insert(i, i);
-			minmax.display(nullptr);
+			//minmax.display(nullptr);
 		}
 
 		/*for (int i = 1; i <= 5; i++) {
@@ -83,8 +84,8 @@ int main()
 
 		start = chrono::high_resolution_clock::now();
 
-		int findValue = 10;
-		int findCount = 20;
+		int findValue = 1000;
+		int findCount = 100;
 
 		/*MMSort::MMNode* bestNode = minmax.searchBestNode(1);
 		if (bestNode) {
@@ -96,13 +97,13 @@ int main()
 			}
 		}*/
 
-		MMSort::MMNode* root = minmax.root;
-		if (root) {
-			minmax.display(nullptr);
-		}
+		//MMSort::MMNode* root = minmax.root;
+		//if (root) {
+			//minmax.display(nullptr);
+		//}
 
-		//for (int j=0; j < 1000; j++) {
-		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
+		for (int j=0; j < 1; j++) {
+		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount, -200);
 
 			for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
 				cout << "Rank [" 
@@ -114,7 +115,7 @@ int main()
 					<< endl;
 			}
 
-		//}
+		}
 
 		//minmax.traverse(findValue, [](MMSort::MMTreeNode* element) -> void {
 		//	totalTreeNodes++;// += element->node->size;
