@@ -75,8 +75,6 @@ public:
 
 		}
 
-		
-
 		MMNode* search(K key, unsigned int count =0) {
 			if (chsize > 0) {
 				/*if (key >= children[size - 1]->cmax) {
@@ -107,16 +105,9 @@ public:
 		}
 
 		MMNode *insert(K key, V value) {
-
-			//if (!leaf) {
 			MMNode* node = search(key);
-
 			return node->insertLeaf(key, value);
 		}
-
-		
-
-		
 
 		void updateMinMaxLeaf() {
 			if (size <= 0) return;
@@ -150,16 +141,10 @@ public:
 			// update sizes to match moved keys
 			size = nsplit;
 			right->size = N - nsplit;
-			//right->parent = parent;
-
-			//span -= N - nsplit;
 			decrementSpan(N - nsplit);
 
 			updateMinMaxLeaf();
 			right->updateMinMaxLeaf();
-			
-			//right->incrementSpan(right->size);
-			//incrementSpan(N - nsplit);
 
 			// old one connected with left, is now connected with new right
 			MMNode* farRight = nextNode;
@@ -174,14 +159,9 @@ public:
 			nextNode = right;
 
 			if (parent == nullptr) {
-				//decrementSpan(N - nsplit);
-
 				MMNode* newRoot = new MMNode(false);
 				newRoot->insertNode(this);
 				newRoot->insertNode(right);
-
-				//incrementSpan(N - nsplit);
-				//newRoot->incrementSpan(right->span + span);
 				newRoot->incrementSpan(N - nsplit);
 				right->incrementSpan(right->size);
 			
@@ -189,7 +169,6 @@ public:
 			}
 			else {
 				parent->insertNode(right);
-				//right->span = right->size;
 				right->incrementSpan(right->size);
 			}
 		}
@@ -202,19 +181,38 @@ public:
 				incrementSpan(1);
 				updateMinMaxLeaf();
 			}
+			else {
 
-			//find index where key is less, insert into index and shift to right
-			int i = 0;
-			for (; i < size; i++) {
-				if (key < data[i]->key) {
-					mmShiftRight<MMKey*>(data, i, size);
-					data[i] = new MMKey(key, value);
-					size++;
-					incrementSpan(1);
-					if (i == 0)
-						updateMinMaxLeaf();
-					break;
+				//find index where key is less, insert into index and shift to right
+				int i = 0;
+				bool done = false;
+				int ilog = log(N/2) / log(2);
+
+				//skip through the list in intervals of log2(size)
+				//backtrack once when the key is found and loop forward again to find the actual placement
+				for (; i < size; i += ilog) {
+					if (key < data[i]->key) {
+						i -= ilog;
+						break;
+					}
+					if (i + ilog >= size) {
+						ilog = 1;
+					}
 				}
+
+				for (; i < size; i++) {
+					if (key < data[i]->key) {
+						mmShiftRight<MMKey*>(data, i, size);
+						data[i] = new MMKey(key, value);
+						size++;
+						incrementSpan(1);
+						if (i == 0)
+							updateMinMaxLeaf();
+						break;
+					}
+				}
+			
+
 			}
 
 			//reached capacity, split the node
@@ -226,13 +224,6 @@ public:
 				MMNode* farRight = nextNode;
 				if (farRight != nullptr)
 					farRight->prevNode = this;
-
-				// right is now connected in middle between left and far right
-				//farRight->nextNode = farRight;
-				//right->prevNode = left->node;
-
-				// left is connected to new right
-				//nextNode = right;
 			}
 			return nullptr;
 		}
@@ -243,44 +234,22 @@ public:
 
 			if (chsize == 0 || node->cmin > children[chsize-1]->cmax) {
 				children[chsize] = node;
-				
 				node->childId = chsize++;
-				//size++;
 				updateMinMaxNode();
 			}
 			else {
-			//find index where key is less, insert into index and shift to right
-			for (int i = chsize -1; i >= 0; i--) {
+				//find index where key is less, insert into index and shift to right
+				for (int i = chsize -1; i >= 0; i--) {
 
-				if ((i > 0 && node->cmin > children[i-1]->cmax) && node->cmin <= children[i]->cmax) {
-					mmShiftRight<MMNode*>(children, i, chsize);
-					children[i] = node;
-					node->childId = i;
-					chsize++;
-					updateMinMaxNode();
-					break;
-				}
-
-				//if (node->cmin > children[i]->cmin) {
-
-				//	if (node->cmin > children[i]->cmax) {
-				//		mmShiftRight<MMNode*>(children, i+1, chsize);
-				//		children[i+1] = node;
-				//		node->childId = i+1;
-				//		
-				//	}
-				//	else {
-				//		mmShiftRight<MMNode*>(children, i, chsize);
-				//		children[i] = node;
-				//		node->childId = i;
-				//	}
-				//	//size++;
-				//	chsize++;
-				//	updateMinMaxNode();
-				//	break;
-				//}
-			}
-
+					if ((i > 0 && node->cmin > children[i-1]->cmax) && node->cmin <= children[i]->cmax) {
+						mmShiftRight<MMNode*>(children, i, chsize);
+						children[i] = node;
+						//node->childId = i;
+						chsize++;
+						updateMinMaxNode();
+						break;
+					}
+				}	
 			}
 
 			//reached capacity, split the node
@@ -297,13 +266,8 @@ public:
 			if (ASC) {
 				cmin = children[0]->cmin;
 				cmax = children[chsize - 1]->cmax;
-
-				//MMNode* cur = parent;
-				//while (cur != nullptr) {
 				if( parent != nullptr )
 					parent->updateMinMaxNode();
-					//cur = cur->parent;
-				//}
 			}
 			// from +infinite to -infinite
 			else {
@@ -319,7 +283,7 @@ public:
 			int j = 0;
 			for (int i = nsplit; i < chsize; i++) {
 				right->children[j] = children[i];
-				right->children[j]->childId = j;
+				//right->children[j]->childId = j;
 				right->children[j]->parent = right;
 				spanMove += children[i]->span;
 				j++;
@@ -331,35 +295,20 @@ public:
 
 			decrementSpan(spanMove);
 
-			//right->parent = parent;
 			updateMinMaxNode();
 			right->updateMinMaxNode();
-
-			//incrementSpan(size);
-			//right->incrementSpan(size);
 
 			if (parent == nullptr) {
 				MMNode* newRoot = new MMNode(false);
 				newRoot->insertNode(this);
 				newRoot->insertNode(right);
-
-				//newRoot->incrementSpan(right->span + span);
-
 				right->incrementSpan(spanMove);
 				newRoot->incrementSpan(span);
-				//incrementSpan(size);
-				//right->incrementSpan(right->size);
-				//newRoot->updateMinMaxNode();
 				return newRoot;
 			}
 			else {
 				parent->insertNode(right);
-				//parent->decrementSpan(spanMove);
-
 				right->incrementSpan(spanMove);
-				
-				//right->incrementSpan(right->span);
-				//right->incrementSpan(right->span);
 			}
 			
 		}
@@ -386,8 +335,6 @@ public:
 	};
 
 	MMNode* root = nullptr;
-
-	//bool isAscending = false;
 	typedef K (RecursiveMinMax<K, V, N, ASC>::*sortFuncType)(K, K);
 	sortFuncType sortFunc;
 
@@ -410,38 +357,136 @@ public:
 		return a >= b;
 	}
 
-	void display(MMNode *next, int depth=0) {
+	int display(MMNode *next = nullptr, int maxDepth = -1, int depth=0) {
 
 		if (next == nullptr) {
 			next = root;
 		}
 
-			
-			cout << std::string(depth, '\t') << "Child = " << next->cmin << "," << next->cmax << " :: " << next->span;
-			if (next->nextNode != nullptr) {
-				//cout << " :: " << next->nextNode->cmin;
-			}
-			if (next->parent != nullptr) {
-				//cout  << " :: Parent = " << next->parent->cmin << "," << next->parent->cmax;
-			}
-			cout << endl;
-			for (int i = 0; i < next->size; i++) {
-				cout << std::string(depth, '\t') << "\tKey[" << i << "] = " << next->data[i]->key << endl;
-			}
-			for (int i = 0; i < next->chsize; i++) {
-				//if (next->leaf) {
-					//cout << std::string(depth, '\t') << "\tKey["<<i<<"] = " << next->data[i]->key << endl;
-				//}
-				//else {
-				//if( i < next->chsize )
-					display(next->children[i], depth+1);
-				//}
+		if (maxDepth <= -1 || depth <= maxDepth)
+			cout << std::string(depth, '\t') << "Child = " << next->cmin << "," << next->cmax << " :: " << next->span << endl;
+
+		if (next->nextNode != nullptr) {
+			//cout << " :: " << next->nextNode->cmin;
+		}
+		if (next->parent != nullptr) {
+			//cout  << " :: Parent = " << next->parent->cmin << "," << next->parent->cmax;
+		}
+		for (int i = 0; i < next->size; i++) {
+			cout << std::string(depth, '\t') << "\tKey[" << i << "] = " << next->data[i]->key << endl;
+		}
+		int highestDepth = 0;
+		for (int i = 0; i < next->chsize; i++) {
+			//if (next->leaf) {
+				//cout << std::string(depth, '\t') << "\tKey["<<i<<"] = " << next->data[i]->key << endl;
+			//}
+			//else {
+			//if( i < next->chsize )
+				int d = display(next->children[i], maxDepth, depth+1);
+				if (d > highestDepth) {
+					highestDepth = d;
+					if (next == root) {
+						//cout << "Deepest: " << highestDepth;
+
+					}
+				}
+				//return depth;
+			//}
 					
 				
-			}
+		}
+		
+		return depth;
 
 	}
 
+
+	//reverse the ranking in DESC order, so rank 1 is largest number
+	std::vector<std::tuple<unsigned int, K, V>> revrange(K key, unsigned int count, int offset = 0) {
+
+		MMNode* nearest = root->search(key);
+		std::vector<std::tuple<unsigned int, K, V>> ranks;
+		ranks.reserve(count);
+		if (nearest == nullptr) return ranks;
+
+		int i = nearest->size-1;
+		for (; i >= 0; i--) {
+			if (key >= nearest->data[i]->key)
+				break;
+		}
+
+		unsigned int maxCount = root->span;
+
+		K offsetKey = key;
+		int absOffset = abs(offset);
+		int startPos = i;
+		MMNode* cur = nearest;
+		while (absOffset > 0 && cur != nullptr) {
+
+			if (offset > 0)		 startPos++;
+			else if (offset < 0) startPos--;
+			absOffset--;
+
+
+			//start at end of previous node
+			if (startPos < 0) {
+				if (cur->prevNode != nullptr) {
+					cur = cur->prevNode;
+					startPos = cur->size - 1;
+				}
+				else {
+					startPos = 0;
+					break;
+				}
+			}
+
+			//start at beggining of next node
+			if (startPos >= cur->size) {
+				if (cur->nextNode != nullptr) {
+					cur = cur->nextNode;
+					startPos = 0;
+				}
+				else {
+					startPos = cur->size - 1;
+					break;
+				}
+			}
+		}
+
+		int rankPos = (maxCount - (nearest->tempspan + (i + 1))) + offset;
+		offsetKey = cur->data[startPos]->key;
+
+
+		while (cur != nullptr && ranks.size() < count) {
+			for (int i = startPos; i >= 0; i--) {
+				K k = cur->data[i]->key;
+				V v = cur->data[i]->value;
+				if (i < cur->size-1) {
+					K prevK = cur->data[i + 1]->key;
+					if (prevK != k) {
+						rankPos++;
+					}
+				}
+				else {
+					rankPos++;
+				}
+				if (cur->data[i]->key > offsetKey)//!(this->*sortFunc)(key, node->data[i]->key))
+					continue;
+
+				ranks.push_back({ rankPos, k, v });
+
+				if (ranks.size() >= count) break;
+			}
+			cur = cur->prevNode;
+			if( cur != nullptr )
+				startPos = cur->size - 1;
+		}
+
+		return ranks;
+
+	}
+
+	// pull the rankings in ASC order, so rank 1 is lowest number 
 	std::vector<std::tuple<unsigned int, K, V>> range(K key, unsigned int count, int offset = 0) {
 
 		MMNode* nearest = root->search(key);
@@ -451,50 +496,57 @@ public:
 
 		int i = 0;
 		for (; i < nearest->size; i++) {
-			if (key < nearest->data[i]->key) {
+			if (key < nearest->data[i]->key)
 				break;
-			}
 		}
 
+		K offsetKey = key;
 		int absOffset = abs(offset);
-		int startPos = i;
+		int startPos = i - 1;
+		if (startPos < 0) startPos = 0;
 		MMNode* cur = nearest;
 		while (absOffset > 0 && cur != nullptr) {
 
-			if (offset > 0)
-				startPos++;
-			else if (offset < 0)
-				startPos--;
+			if (offset > 0)		 startPos++;
+			else if (offset < 0) startPos--;
 			absOffset--;
 
 			
-
 			//start at end of previous node
 			if (startPos < 0) {
-				cur = cur->prevNode;
-				if (cur != nullptr)
+				if (cur->prevNode != nullptr) {
+					cur = cur->prevNode;
 					startPos = cur->size - 1;
-				else
+				}
+				else {
+					startPos = 0;
 					break;
+				}
 			}
 
 			//start at beggining of next node
 			if (startPos >= cur->size) {
-				cur = cur->nextNode;
-				if (cur != nullptr)
+				if (cur->nextNode != nullptr) {
+					cur = cur->nextNode;
 					startPos = 0;
-				else break;
+				}
+				else {
+					startPos = cur->size - 1;
+					break;
+				}
 			}
 		}
 
-		MMNode* node = cur;
-		int rankPos = cur->tempspan + offset;
-		while (node != nullptr && ranks.size() < count) {
-			for (int i = startPos; i < node->size; i++) {
-				K k = node->data[i]->key;
-				V v = node->data[i]->value;
+		int rankPos = nearest->tempspan + (i-1) + offset;
+		offsetKey = cur->data[startPos]->key;
+	
+
+		while (cur != nullptr && ranks.size() < count) {
+			for (int i = startPos; i < cur->size; i++) {
+				K k = cur->data[i]->key;
+				V v = cur->data[i]->value;
 				if (i > 0) {
-					K prevK = node->data[i - 1]->key;
+					K prevK = cur->data[i - 1]->key;
 					if (prevK != k) {
 						rankPos++;
 					}
@@ -502,14 +554,14 @@ public:
 				else {
 					rankPos++;
 				}
-				if (key > node->data[i]->key)//!(this->*sortFunc)(key, node->data[i]->key))
+				if (offsetKey > cur->data[i]->key)//!(this->*sortFunc)(key, node->data[i]->key))
 					continue;
 
 				ranks.push_back({ rankPos, k, v });
 
 				if (ranks.size() >= count) break;
 			}
-			node = node->nextNode;
+			cur = cur->nextNode;
 			startPos = 0;
 		}
 

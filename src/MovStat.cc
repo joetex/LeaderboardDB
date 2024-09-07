@@ -34,7 +34,7 @@ int main()
 
 	std::random_device dev;
 	std::mt19937 rng(dev());
-	std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 1000000);
+	std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 10);
 
 	//BTree<BTData> *bt = new BTree<BTData>(256);
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
@@ -43,20 +43,20 @@ int main()
 
 		std::random_device rd;     // Only used once to initialise (seed) engine
 		std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
-		std::uniform_int_distribution<int> uni(1, 10000000); // Guaranteed unbiased
+		std::uniform_int_distribution<int> uni(1, 50); // Guaranteed unbiased
 
 
 		//typedef MinMaxSort<unsigned int, int, 128> MMSort;
 
-		typedef RecursiveMinMax<unsigned int, int, 128, true> MMSort;
+		typedef RecursiveMinMax<unsigned int, int, 8, true> MMSort;
 
 		MMSort minmax;
 
 		//unsigned int firstValue = 100000;
 		//unsigned int score = 10000;
-		unsigned int insertTotal = 10000000;
-		//for (int i = 1; i <= insertTotal; i++) {
-		for (int i = insertTotal; i > 0; i--) {
+		unsigned int insertTotal = 100;
+		for (int i = 1; i <= insertTotal; i++) {
+		//for (int i = insertTotal; i > 0; i--) {
 			/*if (i == 1) {
 			firstValue = dist6(rng);
 			minmax.insert(firstValue, i);
@@ -69,7 +69,7 @@ int main()
 			//}
 			//unsigned int rkey = dist6(rng);
 			//cout << "-------------------- " << i << ":"  << " ----- " << endl;
-			minmax.insert(i, i);
+			minmax.insert(dist6(rng), i);
 			//minmax.display(nullptr);
 		}
 
@@ -84,8 +84,8 @@ int main()
 
 		start = chrono::high_resolution_clock::now();
 
-		int findValue = 1000;
-		int findCount = 100;
+		int findValue = 100;
+		int findCount = 10;
 
 		/*MMSort::MMNode* bestNode = minmax.searchBestNode(1);
 		if (bestNode) {
@@ -99,11 +99,12 @@ int main()
 
 		//MMSort::MMNode* root = minmax.root;
 		//if (root) {
-			//minmax.display(nullptr);
+			int depth = minmax.display(nullptr);
+			cout << "Depth found: " << depth << endl;
 		//}
 
-		for (int j=0; j < 1; j++) {
-		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount, -200);
+		/*for (int j=0; j < 1; j++) {
+		std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
 
 			for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
 				cout << "Rank [" 
@@ -115,7 +116,7 @@ int main()
 					<< endl;
 			}
 
-		}
+		}*/
 
 		//minmax.traverse(findValue, [](MMSort::MMTreeNode* element) -> void {
 		//	totalTreeNodes++;// += element->node->size;
@@ -129,15 +130,15 @@ int main()
 		cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 
-		start = chrono::high_resolution_clock::now();
+		//start = chrono::high_resolution_clock::now();
 		int count = 0;
 
-		for (int i = 0; i < 100000000; i++) {
+		/*for (int i = 0; i < 100000000; i++) {
 			count++;
-		}
+		}*/
 
-		finish = chrono::high_resolution_clock::now();
-		cout << "1M loop " << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
+		//finish = chrono::high_resolution_clock::now();
+		//cout << "1M loop " << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 	}
 	

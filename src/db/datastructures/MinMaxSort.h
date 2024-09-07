@@ -10,58 +10,35 @@
 
 
 template <typename K, typename V, unsigned int N>
-class MinMaxSort {
+class RecursiveMinMax {
 
 	unsigned int m;
 	unsigned int mSplit;
 
 public:
 
+	class MMKey {
+		K key;
+		K value;
+	};
+
 	class MMNode {
 	public:
-		MMNode* next = nullptr;
-		MMNode* prev = nullptr;
+		K cmin;
+		K cmax;
+		bool leaf = false;
+		MMNode** nodes;
 		K* keys;
 		V* values;
-		MMNode() {
+		MMNode(bool isLeaf) {
+			
 			keys = new K[N];
 			values = new V[N];
 		}
 	};
 
-	class MMTreeNode {
-	public:
-		K cmin;
-		K cmax;
-		unsigned int span = 0;
-		unsigned int size = 0;
-		MMNode* node = nullptr;
-		SparseNode<MMTreeNode>* parent = nullptr;
-		unsigned int dataId = -1;
-
-		void incrementParents(unsigned int count = 1) {
-			SparseNode<MMTreeNode>* cur = parent;
-			
-			//increment self and all parents up to root
-			while (cur != nullptr) {
-				cur->dataSpan += count;
-				cur = cur->parent;
-			}
-		}
-
-		void decrementParents(unsigned int count = 1) {
-			SparseNode<MMTreeNode>* cur = parent;
-			
-			//decrement self and all parents up to root
-			while (cur != nullptr) {
-				cur->dataSpan -= count;
-				cur = cur->parent;
-			}
-		}
-	};
 
 
-	SparseBTree<MMTreeNode> nodes;
 	int pageCount = 0;
 	bool isAscending = false;
 
