@@ -75,23 +75,26 @@ int main()
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
 	{
 
-		typedef RecursiveMinMax<unsigned int, int, 128, true> MMSort;
+		typedef RecursiveMinMax<unsigned int, int, 4, true> MMSort;
 
 		MMSort minmax;
 
 		auto start = chrono::high_resolution_clock::now();
 		{
-			unsigned int insertTotal = 1000000;
+			unsigned int insertTotal = 30;
 			int j = 0;
-			for (int i = 1; i <= insertTotal; i++) {
-			//for (int i = insertTotal; i > 0; i--) {
-			 minmax.insert(i, i);
-				//minmax.insert(randint(1,3), insertTotal - i);
+			//for (int i = 1; i <= insertTotal; i++) {
+			for (int i = insertTotal; i > 0; i--) {
+			 //minmax.insert(i, i);
+				minmax.insert(i, i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 		}
+
+		minmax.remove(5, 5);
+		minmax.insert(0, 5);
 		/*cout << "--------------------" << endl;
 		minmax.display();
 
@@ -120,7 +123,7 @@ int main()
 		}*/
 
 		
-		//minmax.display();
+		minmax.display();
 
 		start = chrono::high_resolution_clock::now();
 		{

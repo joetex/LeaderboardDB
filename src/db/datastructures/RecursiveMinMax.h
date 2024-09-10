@@ -35,16 +35,17 @@ public:
 		//used by parents to find specific child node
 		K cmin = 0;
 		K cmax = 0;
-		unsigned int span = 0; //count of all children under this parent 
+		
+		//count of all children under this parent
+		// used to determine rank position the specific keys
+		unsigned int span = 0; 
 
 		//linked list nodes
 		MMNode* nextNode = nullptr;
 		MMNode* prevNode = nullptr;
-		MMNode* headNode = nullptr;
 
-		//minmax skiplist 
+		//parent node
 		MMNode* parent = nullptr;
-		MMNode* root = nullptr;
 
 		//0 = internal
 		//1 = leaf
@@ -714,6 +715,13 @@ public:
 
 	MMNode* search(K key) {
 		
+		MMNode* found = root->search(key);
+
+		return found;
+	}
+
+	MMNode* searchValue(K key) {
+
 		MMNode* found = root->search(key);
 
 		return found;
