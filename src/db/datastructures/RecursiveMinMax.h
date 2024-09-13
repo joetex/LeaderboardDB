@@ -720,7 +720,7 @@ public:
 		return found;
 	}
 
-	MMNode* searchValue(K key) {
+	MMNode* searchValue(V value) {
 
 		MMNode* found = root->search(key);
 
