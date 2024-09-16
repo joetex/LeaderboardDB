@@ -86,15 +86,15 @@ int main()
 			//for (int i = 1; i <= insertTotal; i++) {
 			for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
-				minmax.insert(i, i);
+				minmax.insert(i%4, i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 		}
 
-		minmax.remove(5, 5);
-		minmax.insert(0, 5);
+		//minmax.remove(5, 5);
+		//minmax.insert(0, 5);
 		/*cout << "--------------------" << endl;
 		minmax.display();
 
@@ -127,9 +127,9 @@ int main()
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 1;
+			int findValue = 0;
 			int findCount = 10;
-			/*for (int j=0; j < 1; j++) {
+			for (int j=0; j < 1; j++) {
 			std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
 				for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
 					cout << "Rank [" 
@@ -140,7 +140,7 @@ int main()
 						<< std::get<2>(rank)
 						<< endl;
 				}
-			}*/
+			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}
