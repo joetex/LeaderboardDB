@@ -76,7 +76,7 @@ int main()
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
 	{
 
-		typedef MinMaxTree<unsigned int, int, 4, true> MMSort;
+		typedef MinMaxTree<unsigned int, int, 256, true> MMSort;
 
 		MMSort minmax;
 
@@ -84,7 +84,7 @@ int main()
 		auto start = chrono::high_resolution_clock::now();
 		{
 			int j = 0;
-			for (int i = 0; i < insertTotal; i++) {
+			for (int i = 0; i <= insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
 				inserted.push_back(i);
@@ -117,7 +117,7 @@ int main()
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}
 
-		typedef MinMaxTree<unsigned int, int, 4, false> MMSortDesc;
+		typedef MinMaxTree<unsigned int, int, 256, false> MMSortDesc;
 
 		MMSortDesc minmaxd;
 
@@ -125,10 +125,10 @@ int main()
 		{
 			//unsigned int insertTotal = 100;
 			int j = 0;
-			for (int i = 0; i < inserted.size(); i++) {
+			for (int i = 0; i <= insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 				//minmax.insert(i, i);
-				minmaxd.insert(inserted[i], i);
+				minmaxd.insert(i, i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << inserted.size() << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";

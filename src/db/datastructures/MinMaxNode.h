@@ -164,11 +164,25 @@ public:
 		MMNode* child = nullptr;
 		if (childCount > 0) {
 			int i = 0;
-			for (; i < childCount; i++) {
-				child = getChild(i);
-				if (key <= child->getMax())
-					break;
-				count += child->getSpan();
+			if (count == -1) {
+				int logN = log2(N);
+				for (; i < childCount; i+= logN) {
+					if (key <= getChild(i)->getMax()) break;
+				}
+				i = mmClamp(i - logN, 0, childCount - 1);
+				for (; i < childCount; i++) {
+					child = getChild(i);
+					if (key <= child->getMax())
+						break;
+				}
+			}
+			else {
+				for (; i < childCount; i++) {
+					child = getChild(i);
+					if (key <= child->getMax())
+						break;
+					count += child->getSpan();
+				}
 			}
 			if (i >= childCount) i = childCount - 1;
 			return child->revsearch(key, count);
@@ -188,11 +202,24 @@ public:
 				return child->search(key, count);
 			}
 			int i = childCount - 1;
-			for (; i >= 0; i--) {
-				child = getChild(i);
-				if (key >= child->getMin())//&& key <= children[i]->cmax)
-					break;
-				count += child->getSpan();
+			if (count == -1) {
+				int logN = log2(N);
+				for (; i >= 0; i-= logN)
+					if (key >= getChild(i)->getMin()) break;
+				i = mmClamp(i + logN, 0, childCount - 1);
+				for (; i >= 0; i--) {
+					child = getChild(i);
+					if (key >= child->getMin())//&& key <= children[i]->cmax)
+						break;
+				}
+			}
+			else {
+				for (; i >= 0; i--) {
+					child = getChild(i);
+					if (key >= child->getMin())//&& key <= children[i]->cmax)
+						break;
+					count += child->getSpan();
+				}
 			}
 			if (i < 0) i = 0;
 			return child->search(key, count);
@@ -208,8 +235,8 @@ public:
 
 	MinMaxNode* insert(K key, V data) {
 		MinMaxNode* node = nullptr;
-		if (ASC) node = search(key);
-		else node = revsearch(key);
+		if (ASC) node = search(key, -1);
+		else node = revsearch(key, -1);
 		return node->insertLeaf(key, data);
 	}
 

@@ -189,7 +189,7 @@ public:
 
 		K offsetKey = key;
 		int absOffset = abs(offset);
-		int startPos = i - 1;
+		int startPos = i;
 		if (startPos < 0) startPos = 0;
 		MMNode* cur = nearest;
 		while (absOffset > 0 && cur != nullptr) {
