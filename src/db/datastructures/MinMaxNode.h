@@ -174,7 +174,7 @@ public:
 			return child->revsearch(key, count);
 		}
 
-		setTempSpan(count + 1);
+		setTempSpan(count );
 		//tempspan = (count + 1);
 		return this;
 	}
@@ -231,7 +231,13 @@ public:
 
 			//find index where key is less, insert into index and shift to right
 			int i = 0;
+			int logN = log2(N);
+
 			if (ASC) {
+				for (; i < keyCount; i+= logN)
+					if (key < getKey(i)->key) break;
+				i = mmClamp(i-logN, 0, keyCount - 1);
+
 				for (; i < keyCount; i++) {
 					temp = getKey(i);
 					if (key < temp->key) {
@@ -240,6 +246,10 @@ public:
 				}
 			}
 			else {
+				for (; i < keyCount; i += logN)
+					if (key <= getKey(i)->key) break;
+				i = mmClamp(i - logN, 0, keyCount - 1);
+
 				for (; i < keyCount; i++) {
 					temp = getKey(i);
 					if (key <= temp->key) {
@@ -267,6 +277,10 @@ public:
 				farRight->setPrev(this);
 		}
 		return nullptr;
+	}
+
+	int mmClamp(int key, int cmin, int cmax) {
+		return max(min(key, cmax), cmin);
 	}
 
 	MinMaxNode* insertNode(MinMaxNode* node, int atIndex = -1) {

@@ -80,14 +80,14 @@ int main()
 
 		MMSort minmax;
 
+			unsigned int insertTotal = 10000000;
 		auto start = chrono::high_resolution_clock::now();
 		{
-			unsigned int insertTotal = 30;
 			int j = 0;
 			for (int i = 0; i < insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
-				inserted.push_back(randint(1, 10));
+				inserted.push_back(i);
 				minmax.insert(inserted[inserted.size()-1], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
@@ -95,11 +95,11 @@ int main()
 
 		}
 
-		minmax.display();
+		//minmax.display();
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 8;
+			int findValue = 1;
 			int findCount = 10;
 			for (int j=0; j < 1; j++) {
 			std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
@@ -135,11 +135,11 @@ int main()
 
 		}
 
-		minmaxd.display();
+		//minmaxd.display();
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 1;
+			int findValue = insertTotal;
 			int findCount = 10;
 			for (int j = 0; j < 1; j++) {
 				std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmaxd.revrange(findValue, findCount);
