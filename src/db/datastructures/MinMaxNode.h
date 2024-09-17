@@ -24,7 +24,7 @@ class MinMaxNode {
 
 	typedef MinMaxNode<K, V, N, ASC> MMNode;
 	typedef MinMaxKey<K, V, N, ASC> MMKey;
-	
+
 	//used by parents to find specific child node
 	K cmin = 0;
 	K cmax = 0;
@@ -218,7 +218,7 @@ public:
 
 	MinMaxNode* insertLeaf(K key, V d) {
 		unsigned int keyCount = getKeyCount();
-		MMKey* kv = new MMKey(key, d); 
+		MMKey* kv = new MMKey(key, d);
 		MMKey* temp = nullptr;
 		//first kv or greater than entire list
 		if (keyCount == 0 || key > getKey(keyCount - 1)->key) {

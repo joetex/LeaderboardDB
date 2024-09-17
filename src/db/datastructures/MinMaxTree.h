@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <vector>
@@ -9,19 +7,15 @@
 #include <cmath>
 #include "db/datastructures/MinMaxNode.h"
 
-
 /**
 *
 * Recursive MinMax
 * Stores data using Linked List for sortedset and Skiplist tree
 *
 */
-
 template <typename K, typename V, unsigned int N, bool ASC>
 class MinMaxTree {
-
 public:
-
 	typedef MinMaxNode<K, V, N, ASC> MMNode;
 
 	MMNode* root = nullptr;
