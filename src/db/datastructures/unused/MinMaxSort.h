@@ -10,7 +10,7 @@
 
 
 template <typename K, typename V, unsigned int N>
-class RecursiveMinMax {
+class MinMaxTree {
 
 	unsigned int m;
 	unsigned int mSplit;

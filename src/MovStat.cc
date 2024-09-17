@@ -11,12 +11,12 @@
 #include <random>
 #include <ranges>
 
-#include "db/datastructures/HashTree.h"
+//#include "db/datastructures/HashTree.h"
 #include "db/datastructures/Base62.h"
-#include "db/datastructures/BTree.h"
+//#include "db/datastructures/BTree.h"
 
 //#include "db/datastructures/MinMaxSort.h"
-#include "db/datastructures/RecursiveMinMax.h"
+#include "db/datastructures/MinMaxTree.h"
 
 using namespace std;
 //#include "fc/btree.h"
@@ -71,11 +71,12 @@ int main()
 	std::mt19937 rng(dev());
 	std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 4);
 
+	std::vector<int> inserted;
 	//BTree<BTData> *bt = new BTree<BTData>(256);
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
 	{
 
-		typedef RecursiveMinMax<unsigned int, int, 4, true> MMSort;
+		typedef MinMaxTree<unsigned int, int, 4, true> MMSort;
 
 		MMSort minmax;
 
@@ -83,57 +84,68 @@ int main()
 		{
 			unsigned int insertTotal = 30;
 			int j = 0;
-			//for (int i = 1; i <= insertTotal; i++) {
-			for (int i = insertTotal; i > 0; i--) {
+			for (int i = 0; i < insertTotal; i++) {
+			//for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
-				minmax.insert(i%4, i);
+				inserted.push_back(randint(1, 10));
+				minmax.insert(inserted[inserted.size()-1], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 		}
 
-		//minmax.remove(5, 5);
-		//minmax.insert(0, 5);
-		/*cout << "--------------------" << endl;
-		minmax.display();
-
-
-		cout << "--------------------" << endl;
-		minmax.remove(4, 4);
-		minmax.display();
-
-		cout << "--------------------" << endl;
-		minmax.remove(3, 3);
-		minmax.display();
-
-
-		cout << "--------------------" << endl;
-		minmax.remove(1, 1);
-		minmax.display();
-
-		cout << "--------------------" << endl;
-		minmax.remove(2, 2);
-		minmax.display();
-
-		for (int j = 5; j < 14; j++) {
-			minmax.remove(j, j);
-			cout << "--------------------" << endl;
-			minmax.display();
-		}*/
-
-		
 		minmax.display();
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 0;
+			int findValue = 8;
 			int findCount = 10;
 			for (int j=0; j < 1; j++) {
 			std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
 				for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
 					cout << "Rank [" 
 						<< std::get<0>(rank) 
+						<< "]: score="
+						<< std::get<1>(rank)
+						<< ": value="
+						<< std::get<2>(rank)
+						<< endl;
+				}
+			}
+			auto finish = chrono::high_resolution_clock::now();
+			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
+		}
+
+		typedef MinMaxTree<unsigned int, int, 4, false> MMSortDesc;
+
+		MMSortDesc minmaxd;
+
+		start = chrono::high_resolution_clock::now();
+		{
+			//unsigned int insertTotal = 100;
+			int j = 0;
+			for (int i = 0; i < inserted.size(); i++) {
+			//for (int i = insertTotal; i > 0; i--) {
+				//minmax.insert(i, i);
+				minmaxd.insert(inserted[i], i);
+			}
+			auto finish = chrono::high_resolution_clock::now();
+			cout << "Insert " << inserted.size() << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
+
+		}
+
+		minmaxd.display();
+
+		start = chrono::high_resolution_clock::now();
+		{
+			int findValue = 1;
+			int findCount = 10;
+			for (int j = 0; j < 1; j++) {
+				std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmaxd.revrange(findValue, findCount);
+				for (std::tuple<unsigned int, unsigned int, int> rank : ranks) {
+					cout << "Rank ["
+						<< std::get<0>(rank)
 						<< "]: score="
 						<< std::get<1>(rank)
 						<< ": value="

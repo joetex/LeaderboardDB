@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.28)
 project(KineticStatDB)
 
 # Add source to this project's executable.
-add_executable (MovStat src/MovStat.cc src/db/datastructures/BTree.h src/db/datastructures/ska_flat_hash_map.h src/db/datastructures/SkipList.h src/db/datastructures/SkipList.cc src/cmdline/CommandLoop.h src/cmdline/CommandLoop.cc src/db/actions/ZADD.h src/db/actions/IAction.h src/db/actions/ActionSystem.h src/db/MemoryDB.h src/db/tables/Member.h src/db/tables/Stat.h src/db/tables/Leaderboard.h "src/db/Engine.h" "src/db/datastructures/HashTree.h" "src/db/datastructures/Base62.h" "src/db/Pager.h" "src/db/datastructures/json.h" "src/db/FileDiskManager.h" "src/db/datastructures/MinMaxSort.h" "src/db/datastructures/RecursiveMinMax.h")
+add_executable (MovStat src/MovStat.cc "src/db/datastructures/unused/BTree.h" "src/db/datastructures/ska_flat_hash_map.h" "src/db/datastructures/unused/SkipList.h" src/cmdline/CommandLoop.h src/cmdline/CommandLoop.cc src/db/actions/ZADD.h src/db/actions/IAction.h src/db/actions/ActionSystem.h src/db/MemoryDB.h src/db/tables/Member.h src/db/tables/Stat.h src/db/tables/Leaderboard.h "src/db/Engine.h" "src/db/datastructures/unused/HashTree.h" "src/db/datastructures/Base62.h" "src/db/Pager.h" "src/db/datastructures/json.h" "src/db/FileDiskManager.h" "src/db/datastructures/unused/MinMaxSort.h" "src/db/datastructures/MinMaxTree.h" "src/db/datastructures/MinMaxNodeSerializer.h")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
