@@ -26,7 +26,7 @@ class MinMaxNode {
 	typedef MinMaxKey<K, V, N, ASC> MMKey;
 
 	//used by parents to find specific child node
-	K cmin = 0;
+	//K cmin = 0;
 	K cmax = 0;
 
 	//count of all children under this parent
@@ -59,15 +59,17 @@ class MinMaxNode {
 	unsigned int chsize = 0;
 
 	//point where split occurs
-	unsigned int nsplit = 0;
+	static inline unsigned int nsplit = floor(N * 0.5);
+	static inline unsigned int nlog2 = ceil(N / log2(N));
+	static inline unsigned int halfN = N - nsplit;
 
 public:
-	K getMin() { return cmin; };
+	//K getMin() { return cmin; };
 	K getMax() { return cmax; };
-	void setMin(K m) { cmin = m; };
+	//void setMin(K m) { cmin = m; };
 	void setMax(K m) { cmax = m; };
 
-	unsigned int getSpan() { return span; };
+	inline unsigned int getSpan() { return span; };
 	void setSpan(unsigned int m) { span = m; };
 
 	MMNode* getNext() { return nextNode; };
@@ -95,7 +97,7 @@ public:
 	}
 
 	MMKey** getKeys() { return keys; };
-	MMKey* getKey(int index) {
+	MMKey* getData(int index) {
 		if (index >= 0 && index < N)
 			return keys[index];
 		return nullptr;
@@ -122,7 +124,11 @@ public:
 	void setNSplit(unsigned int m) { nsplit = m; };
 
 
-	MinMaxNode(bool isLeaf) : leaf(isLeaf), nsplit(floor(N * 0.5)) {
+	MinMaxNode(bool isLeaf) : 
+		leaf(isLeaf)//, 
+		//nsplit(floor(N * 0.5)), 
+		//nlog2(log2(N)) 
+	{
 		if (isLeaf) {
 			keys = new MMKey * [N];
 		}
@@ -140,10 +146,10 @@ public:
 	void display(int depth = 0) {
 
 		//cout << "=======================" << endl;
-		cout << std::string(depth, '\t') << "Child = " << getMin() << "," << getMax() << " :: " << getSpan() << endl;
+		cout << std::string(depth, '\t') << "Child = " << getMax() << " :: " << getSpan() << endl;
 
 		for (int i = 0; i < getKeyCount(); i++) {
-			cout << std::string(depth, '\t') << "\tKey[" << getKey(i)->data << "] = " << getKey(i)->key << endl;
+			cout << std::string(depth, '\t') << "\tKey[" << getData(i)->data << "] = " << getData(i)->key << endl;
 		}
 
 		for (int i = 0; i < getChildrenCount(); i++) {
@@ -165,11 +171,12 @@ public:
 		if (childCount > 0) {
 			int i = 0;
 			if (count == -1) {
-				int logN = log2(N);
-				for (; i < childCount; i+= logN) {
+				//scan forward by N/log2(N) intervals through list, to reduce jump counts
+				for (; i < childCount; i+= nlog2) {
 					if (key <= getChild(i)->getMax()) break;
 				}
-				i = mmClamp(i - logN, 0, childCount - 1);
+				//jump backwards by one interval of log(N) to find real child
+				i = mmClamp(i - nlog2, 0, childCount - 1);
 				for (; i < childCount; i++) {
 					child = getChild(i);
 					if (key <= child->getMax())
@@ -196,27 +203,38 @@ public:
 	MinMaxNode* search(K key, unsigned int count = 0) {
 		int childCount = getChildrenCount();
 		MMNode* child = nullptr;
+		MMNode* temp = nullptr;
 		if (childCount > 0) {
 			child = getChild(0);
-			if (key < child->getMin()) {
+			/*if (key <= child->getMax()) {
 				return child->search(key, count);
-			}
+			}*/
 			int i = childCount - 1;
 			if (count == -1) {
-				int logN = log2(N);
-				for (; i >= 0; i-= logN)
-					if (key >= getChild(i)->getMin()) break;
-				i = mmClamp(i + logN, 0, childCount - 1);
-				for (; i >= 0; i--) {
+				//scan backward by N/log2(N) intervals through list, to reduce jump counts
+				for (i=0; i < childCount; i+= nlog2)
+					if (key <= getChild(i)->getMax()) break;
+				//jump forward by one interval of log(N) to find real child
+				i = mmClamp((i - nlog2), 0, childCount - 1);
+				for (; i < childCount; i++) {
 					child = getChild(i);
-					if (key >= child->getMin())//&& key <= children[i]->cmax)
+					if (key <= child->getMax())//&& key <= children[i]->cmax)
+					{
+						if (i < childCount - 1) {
+							temp = getChild(i + 1);
+							if (temp->getMax() <= child->getMax()) {
+								continue;
+							}
+						}
+						//i--;
 						break;
+					}
 				}
 			}
 			else {
 				for (; i >= 0; i--) {
 					child = getChild(i);
-					if (key >= child->getMin())//&& key <= children[i]->cmax)
+					if (key <= child->getMax())//&& key <= children[i]->cmax)
 						break;
 					count += child->getSpan();
 				}
@@ -248,7 +266,7 @@ public:
 		MMKey* kv = new MMKey(key, d);
 		MMKey* temp = nullptr;
 		//first kv or greater than entire list
-		if (keyCount == 0 || key > getKey(keyCount - 1)->key) {
+		if (keyCount == 0 || key > getData(keyCount - 1)->key) {
 			setKey(keyCount, kv);
 			setKeyCount(keyCount + 1);
 			incrementSpan(1);
@@ -258,27 +276,26 @@ public:
 
 			//find index where key is less, insert into index and shift to right
 			int i = 0;
-			int logN = log2(N);
 
 			if (ASC) {
-				for (; i < keyCount; i+= logN)
-					if (key < getKey(i)->key) break;
-				i = mmClamp(i-logN, 0, keyCount - 1);
+				for (; i < keyCount; i+= nlog2)
+					if (key < getData(i)->key) break;
+				i = mmClamp(i - nlog2, 0, keyCount - 1);
 
 				for (; i < keyCount; i++) {
-					temp = getKey(i);
-					if (key < temp->key) {
+					temp = getData(i);
+					if (key <= temp->key) {
 						break;
 					}
 				}
 			}
 			else {
-				for (; i < keyCount; i += logN)
-					if (key <= getKey(i)->key) break;
-				i = mmClamp(i - logN, 0, keyCount - 1);
+				for (; i < keyCount; i += nlog2)
+					if (key <= getData(i)->key) break;
+				i = mmClamp(i - nlog2, 0, keyCount - 1);
 
 				for (; i < keyCount; i++) {
-					temp = getKey(i);
+					temp = getData(i);
 					if (key <= temp->key) {
 						break;
 					}
@@ -306,7 +323,7 @@ public:
 		return nullptr;
 	}
 
-	int mmClamp(int key, int cmin, int cmax) {
+	inline int mmClamp(int key, int cmin, int cmax) {
 		return max(min(key, cmax), cmin);
 	}
 
@@ -338,7 +355,7 @@ public:
 		MinMaxNode* right = new MinMaxNode(true);
 		unsigned int keyCount = getKeyCount();
 		for (int i = nsplit, j = 0; i < keyCount; i++) {
-			right->setKey(j++, getKey(i));
+			right->setKey(j++, getData(i));
 		}
 
 		//remove count entirely from parent tree
@@ -346,8 +363,8 @@ public:
 
 		// update sizes to match moved keys
 		setKeyCount(nsplit);
-		right->setKeyCount(N - nsplit);
-		decrementSpan(N - nsplit);
+		right->setKeyCount(halfN);
+		decrementSpan(halfN);
 
 		updateMinMaxLeaf();
 		right->updateMinMaxLeaf();
@@ -370,7 +387,7 @@ public:
 			MinMaxNode* newRoot = new MinMaxNode(false);
 			newRoot->insertNode(this, 0);
 			newRoot->insertNode(right, 1);
-			newRoot->incrementSpan(N - nsplit);
+			newRoot->incrementSpan(halfN);
 			right->incrementSpan(right->getKeyCount());
 
 			return newRoot;
@@ -388,7 +405,7 @@ public:
 		unsigned int spanMove = 0;
 		unsigned int childCount = getChildrenCount();
 		int j = 0;
-		for (int i = getNSplit(); i < childCount; i++) {
+		for (int i = nsplit; i < childCount; i++) {
 			child = getChild(i);
 			child->setChildId(j);
 			child->setParent(right);
@@ -400,7 +417,7 @@ public:
 		// update sizes to match moved keys
 		setChildrenCount(nsplit);
 		//chsize = nsplit;
-		right->setChildrenCount(N - nsplit);
+		right->setChildrenCount(halfN);
 
 		decrementSpan(spanMove);
 
@@ -432,7 +449,7 @@ public:
 		int i = 0;
 		unsigned int keyCount = nearest->getKeyCount();
 		for (; i < keyCount; i++) {
-			kv = nearest->getKey(i);
+			kv = nearest->getData(i);
 			if (d == kv->data) {
 				break;
 			}
@@ -504,8 +521,8 @@ public:
 	void updateMinMaxLeaf() {
 		if (getKeyCount() <= 0) return;
 		//from -infinite to +infinite
-		setMin(getKey(0)->key);
-		setMax(getKey(getKeyCount() - 1)->key);
+		//setMin(getKey(0)->key);
+		setMax(getData(getKeyCount() - 1)->key);
 
 		if (getParent() != nullptr)
 			getParent()->updateMinMaxNode();
@@ -514,7 +531,7 @@ public:
 	void updateMinMaxNode() {
 		if (getChildrenCount() <= 0) return;
 		//from -infinite to +infinite
-		setMin(getChild(0)->getMin());
+		//setMin(getChild(0)->getMin());
 		setMax(getChild(getChildrenCount() - 1)->getMax());
 		if (getParent() != nullptr)
 			getParent()->updateMinMaxNode();
@@ -547,16 +564,20 @@ public:
 	}
 
 	void mmShiftRightNode(MinMaxNode** arr, int i, unsigned int size) {
+		MinMaxNode* temp = nullptr;
 		for (int idx = size - 1; idx >= i; idx--) {
-			arr[idx]->setChildId(idx + 1);
-			arr[idx + 1] = arr[idx];
+			temp = arr[idx];
+			temp->setChildId(idx + 1);
+			arr[idx + 1] = temp;
 		}
 	}
 
 	void mmShiftLeftNode(MinMaxNode** arr, int i, unsigned int size) {
+		MinMaxNode* temp = nullptr;
 		for (; i < size - 1; i++) {
-			arr[i + 1]->setChildId(i);
-			arr[i] = arr[i + 1];
+			temp = arr[i+1];
+			temp->setChildId(i);
+			arr[i] = temp;
 		}
 	}
 

@@ -27,14 +27,14 @@ public:
 	}
 
 	MMNode* insert(K key, V data) {
-		//cout << "--------------" << key << "------------------------------------" << endl;
+		cout << "--------------" << key << "------------------------------------" << endl;
 		MMNode* newRoot = root->insert(key, data);
 		if (root != nullptr) {
 			while (root->getParent() != nullptr) {
 				root = root->getParent();
 			}
 		}
-		//display(nullptr);
+		display(nullptr);
 		return root;
 	}
 
@@ -45,7 +45,7 @@ public:
 		}
 
 		if (maxDepth <= -1 || depth <= maxDepth)
-			cout << std::string(depth, '\t') << "Child = " << next->getMin() << "," << next->getMax() << " :: " << next->getSpan() << endl;
+			cout << std::string(depth, '\t') << "Child = " <<  next->getMax() << " :: " << next->getSpan() << endl;
 
 		if (next->getNext() != nullptr) {
 			//cout << " :: " << next->nextNode->cmin;
@@ -54,7 +54,7 @@ public:
 			//cout  << " :: Parent = " << next->parent->cmin << "," << next->parent->cmax;
 		}
 		for (int i = 0; i < next->getKeyCount(); i++) {
-			cout << std::string(depth, '\t') << "\tKey[" << next->getKey(i)->data << "] = " << next->getKey(i)->key << endl;
+			cout << std::string(depth, '\t') << "\tKey[" << next->getData(i)->data << "] = " << next->getData(i)->key << endl;
 		}
 		int highestDepth = 0;
 		for (int i = 0; i < next->getChildrenCount(); i++) {
@@ -94,7 +94,7 @@ public:
 
 		int i = nearest->getKeyCount() - 1;
 		for (; i > 0; i--) {
-			if (key >= nearest->getKey(i)->key)
+			if (key >= nearest->getData(i)->key)
 				break;
 		}
 
@@ -138,13 +138,13 @@ public:
 		if (startPos < 0) startPos = 0;
 
 		int rankPos = (maxCount - (nearest->getTempSpan() + (i + 1))) + offset;
-		offsetKey = cur->getKey(startPos)->key;
+		offsetKey = cur->getData(startPos)->key;
 
 
 		while (cur != nullptr && ranks.size() < count) {
 			for (int i = startPos; i >= 0; i--) {
-				K k = cur->getKey(i)->key;
-				V v = cur->getKey(i)->data;
+				K k = cur->getData(i)->key;
+				V v = cur->getData(i)->data;
 				if (ranks.size() > 0) {
 					K prevK = std::get<1>(ranks[ranks.size() - 1]);
 					if (prevK != k) {
@@ -154,7 +154,7 @@ public:
 				else {
 					rankPos++;
 				}
-				if (cur->getKey(i)->key > offsetKey)//!(this->*sortFunc)(key, node->data[i]->key))
+				if (cur->getData(i)->key > offsetKey)//!(this->*sortFunc)(key, node->data[i]->key))
 					continue;
 
 				ranks.push_back({ rankPos, k, v });
@@ -183,7 +183,7 @@ public:
 
 		int i = 0;
 		for (; i < nearest->getKeyCount(); i++) {
-			if (key <= nearest->getKey(i)->key)
+			if (key <= nearest->getData(i)->key)
 				break;
 		}
 
@@ -224,14 +224,14 @@ public:
 			}
 		}
 
-		int rankPos = nearest->getTempSpan() + (i - 1) + offset;
-		offsetKey = cur->getKey(startPos)->key;
+		int rankPos = nearest->getTempSpan() + (i) + offset;
+		offsetKey = cur->getData(startPos)->key;
 
 
 		while (cur != nullptr && ranks.size() < count) {
 			for (int i = startPos; i < cur->getKeyCount(); i++) {
-				K k = cur->getKey(i)->key;
-				V v = cur->getKey(i)->data;
+				K k = cur->getData(i)->key;
+				V v = cur->getData(i)->data;
 				if (ranks.size() > 0) {
 					K prevK = std::get<1>(ranks[ranks.size() - 1]);
 					if (prevK != k) {
@@ -241,7 +241,7 @@ public:
 				else {
 					rankPos++;
 				}
-				if (offsetKey > cur->getKey(i)->key)//!(this->*sortFunc)(key, node->data[i]->key))
+				if (offsetKey > cur->getData(i)->key)//!(this->*sortFunc)(key, node->data[i]->key))
 					continue;
 
 				ranks.push_back({ rankPos, k, v });

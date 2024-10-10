@@ -76,18 +76,18 @@ int main()
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
 	{
 
-		typedef MinMaxTree<unsigned int, int, 256, true> MMSort;
+		typedef MinMaxTree<unsigned int, int, 4, true> MMSort;
 
 		MMSort minmax;
 
-			unsigned int insertTotal = 10000000;
+			unsigned int insertTotal = 10;
 		auto start = chrono::high_resolution_clock::now();
 		{
 			int j = 0;
 			for (int i = 0; i <= insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
-				inserted.push_back(i);
+				inserted.push_back(dist6(mt));
 				minmax.insert(inserted[inserted.size()-1], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
@@ -95,11 +95,11 @@ int main()
 
 		}
 
-		//minmax.display();
+		minmax.display();
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 1;
+			int findValue = 0;
 			int findCount = 10;
 			for (int j=0; j < 1; j++) {
 			std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
@@ -108,7 +108,7 @@ int main()
 						<< std::get<0>(rank) 
 						<< "]: score="
 						<< std::get<1>(rank)
-						<< ": value="
+						<< ": id="
 						<< std::get<2>(rank)
 						<< endl;
 				}
@@ -117,7 +117,7 @@ int main()
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}
 
-		typedef MinMaxTree<unsigned int, int, 256, false> MMSortDesc;
+		typedef MinMaxTree<unsigned int, int, 4, false> MMSortDesc;
 
 		MMSortDesc minmaxd;
 
@@ -128,7 +128,7 @@ int main()
 			for (int i = 0; i <= insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 				//minmax.insert(i, i);
-				minmaxd.insert(i, i);
+				minmaxd.insert(inserted[i], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << inserted.size() << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
@@ -148,7 +148,7 @@ int main()
 						<< std::get<0>(rank)
 						<< "]: score="
 						<< std::get<1>(rank)
-						<< ": value="
+						<< ": id="
 						<< std::get<2>(rank)
 						<< endl;
 				}
