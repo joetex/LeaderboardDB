@@ -69,26 +69,33 @@ int main()
 
 	std::random_device dev;
 	std::mt19937 rng(dev());
-	std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 4);
+	std::uniform_int_distribution<std::mt19937::result_type> dist6(1, 1000000);
 
 	std::vector<int> inserted;
 	//BTree<BTData> *bt = new BTree<BTData>(256);
 	//frozenca::BTreeSet<std::int64_t, 64> bt;// = new frozenca::BTreeMap<int, BTData, 128>();
 	{
 
-		typedef MinMaxTree<unsigned int, int, 256, true> MMSort;
+		typedef MinMaxTree<128, true> MMSort;
 
 		MMSort minmax;
 
-			unsigned int insertTotal = 10000000;
+			unsigned int insertTotal = 1000000;
+
+			//for (int i = 0; i <= insertTotal; i++) {
+				for (int i = insertTotal; i >= 0; i--) {
+				//inserted.push_back(i);// dist6(mt));
+				inserted.push_back( dist6(mt));
+			}
+				insertTotal = inserted.size();
 		auto start = chrono::high_resolution_clock::now();
 		{
 			int j = 0;
-			for (int i = 0; i <= insertTotal; i++) {
+			for (int i = 0; i < insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 			 //minmax.insert(i, i);
-				inserted.push_back(i);
-				minmax.insert(inserted[inserted.size()-1], i);
+				
+				minmax.insert(inserted[i], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
@@ -99,12 +106,14 @@ int main()
 
 		start = chrono::high_resolution_clock::now();
 		{
-			int findValue = 1;
+			int findValue = 0;
 			int findCount = 10;
-			for (int j=0; j < 1; j++) {
-			std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmax.range(findValue, findCount);
-				for (std::tuple<unsigned int, unsigned int,int> rank : ranks) {
-					cout << "Rank [" 
+			std::ostringstream os;
+			for (int j=0; j < 100000; j++) {
+			std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks = minmax.range(findValue, findCount);
+				for (std::tuple<unsigned int, unsigned long long, unsigned long long> rank : ranks) {
+					
+					os << "Rank [" 
 						<< std::get<0>(rank) 
 						<< "]: score="
 						<< std::get<1>(rank)
@@ -114,10 +123,11 @@ int main()
 				}
 			}
 			auto finish = chrono::high_resolution_clock::now();
+			//cout << os.str();
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}
 
-		typedef MinMaxTree<unsigned int, int, 256, false> MMSortDesc;
+		typedef MinMaxTree<128, false> MMSortDesc;
 
 		MMSortDesc minmaxd;
 
@@ -125,13 +135,13 @@ int main()
 		{
 			//unsigned int insertTotal = 100;
 			int j = 0;
-			for (int i = 0; i <= insertTotal; i++) {
+			for (int i = 0; i < insertTotal; i++) {
 			//for (int i = insertTotal; i > 0; i--) {
 				//minmax.insert(i, i);
-				minmaxd.insert(i, i);
+				minmaxd.insert(inserted[i], i);
 			}
 			auto finish = chrono::high_resolution_clock::now();
-			cout << "Insert " << inserted.size() << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
+			cout << "Insert " << insertTotal << " : " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 
 		}
 
@@ -142,8 +152,8 @@ int main()
 			int findValue = insertTotal;
 			int findCount = 10;
 			for (int j = 0; j < 1; j++) {
-				std::vector<std::tuple<unsigned int, unsigned int, int>> ranks = minmaxd.revrange(findValue, findCount);
-				for (std::tuple<unsigned int, unsigned int, int> rank : ranks) {
+				std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks = minmaxd.revrange(findValue, findCount);
+				for (std::tuple<unsigned int, unsigned long long, unsigned long long> rank : ranks) {
 					cout << "Rank ["
 						<< std::get<0>(rank)
 						<< "]: score="

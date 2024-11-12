@@ -13,25 +13,33 @@
 * Stores data using Linked List for sortedset and Skiplist tree
 *
 */
-template <typename K, typename V, unsigned int N, bool ASC>
+template <unsigned int N, bool ASC>
 class MinMaxTree {
 public:
-	typedef MinMaxNode<K, V, N, ASC> MMNode;
+	typedef MinMaxNode<N> MMNode;
 
 	MMNode* root = nullptr;
-	typedef K(MinMaxTree<K, V, N, ASC>::* sortFuncType)(K, K);
-	sortFuncType sortFunc;
+	//typedef K(MinMaxTree<K, V, N, ASC>::* sortFuncType)(K, K);
+	//sortFuncType sortFunc;
 
 	MinMaxTree() {
 		root = new MMNode(true);
 	}
 
-	MMNode* insert(K key, V data) {
+	MMNode* insert(unsigned long long key, unsigned long long data) {
 		//cout << "--------------" << key << "------------------------------------" << endl;
-		MMNode* newRoot = root->insert(key, data);
+		//MMNode* newRoot = root->insert(key, data);
+
+		MMNode* newRoot = nullptr;
+		if (ASC) newRoot = root->search(key);
+		else newRoot = root->revsearch(key);
+
+		newRoot = newRoot->insertLeaf(key, data, true);
+
+
 		if (root != nullptr) {
-			while (root->getParent() != nullptr) {
-				root = root->getParent();
+			while (root->parent != nullptr) {
+				root = root->parent;
 			}
 		}
 		//display(nullptr);
@@ -45,37 +53,43 @@ public:
 		}
 
 		if (maxDepth <= -1 || depth <= maxDepth)
-			cout << std::string(depth, '\t') << "Child = " << next->getMin() << "," << next->getMax() << " :: " << next->getSpan() << endl;
+			cout << std::string(depth, '\t') << "Child = " << next->record->cmin << "," << next->record->cmax << " :: " << next->record->span << endl;
 
-		if (next->getNext() != nullptr) {
+		if (next->nextNode != nullptr) {
 			//cout << " :: " << next->nextNode->cmin;
 		}
-		if (next->getParent() != nullptr) {
+		if (next->parent != nullptr) {
 			//cout  << " :: Parent = " << next->parent->cmin << "," << next->parent->cmax;
 		}
-		for (int i = 0; i < next->getKeyCount(); i++) {
-			cout << std::string(depth, '\t') << "\tKey[" << next->getKey(i)->data << "] = " << next->getKey(i)->key << endl;
+		if (next->record->leaf) {
+		for (int i = 0; i < next->record->size; i++) {
+			cout << std::string(depth, '\t') << "\tKey[" << next->record->keys[i]->data << "] = " << next->record->keys[i]->key << endl;
 		}
-		int highestDepth = 0;
-		for (int i = 0; i < next->getChildrenCount(); i++) {
-			//if (next->leaf) {
-				//cout << std::string(depth, '\t') << "\tKey["<<i<<"] = " << next->data[i]->key << endl;
-			//}
-			//else {
-			//if( i < next->chsize )
-			int d = display(next->getChild(i), maxDepth, depth + 1);
-			if (d > highestDepth) {
-				highestDepth = d;
-				if (next == root) {
-					//cout << "Deepest: " << highestDepth;
 
+		}
+		else {
+			int highestDepth = 0;
+			for (int i = 0; i < next->record->size; i++) {
+				//if (next->leaf) {
+					//cout << std::string(depth, '\t') << "\tKey["<<i<<"] = " << next->data[i]->key << endl;
+				//}
+				//else {
+				//if( i < next->chsize )
+				int d = display(next->record->children[i], maxDepth, depth + 1);
+				if (d > highestDepth) {
+					highestDepth = d;
+					if (next == root) {
+						//cout << "Deepest: " << highestDepth;
+
+					}
 				}
+				//return depth;
+			//}
+
+
 			}
-			//return depth;
-		//}
-
-
 		}
+		
 
 		return depth;
 
@@ -83,24 +97,24 @@ public:
 
 
 	//reverse the ranking in DESC order, so rank 1 is largest number
-	std::vector<std::tuple<unsigned int, K, V>> revrange(K key, unsigned int count, int offset = 0) {
+	std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> revrange(unsigned long long key, unsigned int count, int offset = 0) {
 		/*if (ASC) {
 			return range(key, count, offset);
 		}*/
-		MMNode* nearest = root->search(key);
-		std::vector<std::tuple<unsigned int, K, V>> ranks;
+		MMNode* nearest = root->searchWithCount(key);
+		std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks;
 		ranks.reserve(count);
 		if (nearest == nullptr) return ranks;
 
-		int i = nearest->getKeyCount() - 1;
+		int i = nearest->record->size - 1;
 		for (; i > 0; i--) {
-			if (key >= nearest->getKey(i)->key)
+			if (key >= nearest->record->keys[i]->key)
 				break;
 		}
 
-		unsigned int maxCount = root->getSpan();
+		unsigned int maxCount = root->record->span;
 
-		K offsetKey = key;
+		unsigned long long offsetKey = key;
 		int absOffset = abs(offset);
 		int startPos = i;
 		MMNode* cur = nearest;
@@ -113,9 +127,9 @@ public:
 
 			//start at end of previous node
 			if (startPos < 0) {
-				if (cur->getPrev() != nullptr) {
-					cur = cur->getPrev();
-					startPos = cur->getKeyCount() - 1;
+				if (cur->prevNode != nullptr) {
+					cur = cur->prevNode;
+					startPos = cur->record->size - 1;
 				}
 				else {
 					startPos = 0;
@@ -124,29 +138,29 @@ public:
 			}
 
 			//start at beggining of next node
-			if (startPos >= cur->getKeyCount()) {
-				if (cur->getNext() != nullptr) {
-					cur = cur->getNext();
+			if (startPos >= cur->record->size) {
+				if (cur->nextNode != nullptr) {
+					cur = cur->nextNode;
 					startPos = 0;
 				}
 				else {
-					startPos = cur->getKeyCount() - 1;
+					startPos = cur->record->size - 1;
 					break;
 				}
 			}
 		}
 		if (startPos < 0) startPos = 0;
 
-		int rankPos = (maxCount - (nearest->getTempSpan() + (i + 1))) + offset;
-		offsetKey = cur->getKey(startPos)->key;
+		int rankPos = (maxCount - (nearest->tempspan + (i + 1))) + offset;
+		offsetKey = cur->record->keys[startPos]->key;
 
 
 		while (cur != nullptr && ranks.size() < count) {
 			for (int i = startPos; i >= 0; i--) {
-				K k = cur->getKey(i)->key;
-				V v = cur->getKey(i)->data;
+				unsigned long long k = cur->record->keys[i]->key;
+				unsigned long long v = cur->record->keys[i]->data;
 				if (ranks.size() > 0) {
-					K prevK = std::get<1>(ranks[ranks.size() - 1]);
+					unsigned long long prevK = std::get<1>(ranks[ranks.size() - 1]);
 					if (prevK != k) {
 						rankPos++;
 					}
@@ -154,16 +168,16 @@ public:
 				else {
 					rankPos++;
 				}
-				if (cur->getKey(i)->key > offsetKey)//!(this->*sortFunc)(key, node->data[i]->key))
+				if (cur->record->keys[i]->key > offsetKey)//!(this->*sortFunc)(key, node->data[i]->key))
 					continue;
 
 				ranks.push_back({ rankPos, k, v });
 
 				if (ranks.size() >= count) break;
 			}
-			cur = cur->getPrev();
+			cur = cur->prevNode;
 			if (cur != nullptr)
-				startPos = cur->getKeyCount() - 1;
+				startPos = cur->record->size - 1;
 		}
 
 		return ranks;
@@ -171,23 +185,23 @@ public:
 	}
 
 	// pull the rankings in ASC order, so rank 1 is lowest number 
-	std::vector<std::tuple<unsigned int, K, V>> range(K key, unsigned int count, int offset = 0) {
+	std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> range(unsigned long long key, unsigned int count, int offset = 0) {
 		/*if (!ASC) {
 			return revrange(key, count, offset);
 		}*/
 
-		MMNode* nearest = root->revsearch(key);
-		std::vector<std::tuple<unsigned int, K, V>> ranks;
+		MMNode* nearest = root->revsearchWithCount(key);
+		std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks;
 		ranks.reserve(count);
 		if (nearest == nullptr) return ranks;
 
 		int i = 0;
-		for (; i < nearest->getKeyCount(); i++) {
-			if (key <= nearest->getKey(i)->key)
+		for (; i < nearest->record->size; i++) {
+			if (key <= nearest->record->keys[i]->key)
 				break;
 		}
 
-		K offsetKey = key;
+		unsigned long long offsetKey = key;
 		int absOffset = abs(offset);
 		int startPos = i;
 		if (startPos < 0) startPos = 0;
@@ -201,9 +215,9 @@ public:
 
 			//start at end of previous node
 			if (startPos < 0) {
-				if (cur->getPrev() != nullptr) {
-					cur = cur->getPrev();
-					startPos = cur->getKeyCount() - 1;
+				if (cur->prevNode != nullptr) {
+					cur = cur->prevNode;
+					startPos = cur->record->size - 1;
 				}
 				else {
 					startPos = 0;
@@ -212,28 +226,28 @@ public:
 			}
 
 			//start at beggining of next node
-			if (startPos >= cur->getKeyCount()) {
-				if (cur->getNext() != nullptr) {
-					cur = cur->getNext();
+			if (startPos >= cur->record->size) {
+				if (cur->nextNode != nullptr) {
+					cur = cur->nextNode;
 					startPos = 0;
 				}
 				else {
-					startPos = cur->getKeyCount() - 1;
+					startPos = cur->record->size - 1;
 					break;
 				}
 			}
 		}
 
-		int rankPos = nearest->getTempSpan() + (i - 1) + offset;
-		offsetKey = cur->getKey(startPos)->key;
+		int rankPos = nearest->tempspan + (i ) + offset;
+		offsetKey = cur->record->keys[startPos]->key;
 
 
 		while (cur != nullptr && ranks.size() < count) {
-			for (int i = startPos; i < cur->getKeyCount(); i++) {
-				K k = cur->getKey(i)->key;
-				V v = cur->getKey(i)->data;
+			for (int i = startPos; i < cur->record->size; i++) {
+				unsigned long long k = cur->record->keys[i]->key;
+				unsigned long long v = cur->record->keys[i]->data;
 				if (ranks.size() > 0) {
-					K prevK = std::get<1>(ranks[ranks.size() - 1]);
+					unsigned long long prevK = std::get<1>(ranks[ranks.size() - 1]);
 					if (prevK != k) {
 						rankPos++;
 					}
@@ -241,14 +255,14 @@ public:
 				else {
 					rankPos++;
 				}
-				if (offsetKey > cur->getKey(i)->key)//!(this->*sortFunc)(key, node->data[i]->key))
+				if (offsetKey > cur->record->keys[i]->key)//!(this->*sortFunc)(key, node->data[i]->key))
 					continue;
 
 				ranks.push_back({ rankPos, k, v });
 
 				if (ranks.size() >= count) break;
 			}
-			cur = cur->getNext();
+			cur = cur->nextNode;
 			startPos = 0;
 		}
 
@@ -256,24 +270,24 @@ public:
 
 	}
 
-	MMNode* remove(K key, V data) {
+	MMNode* remove(unsigned long long key, unsigned long long data) {
 		MMNode* found = root->remove(key, data);
 
 		return found;
 	}
 
-	MMNode* search(K key) {
+	MMNode* search(unsigned long long key) {
 
 		MMNode* found = root->search(key);
 
 		return found;
 	}
 
-	MMNode* searchValue(V data) {
+	MMNode* searchValue(unsigned long long data) {
 		return nullptr;
 	}
 
-	K mmClamp(K key, K cmin, K cmax) {
+	unsigned long long mmClamp(unsigned long long key, unsigned long long cmin, unsigned long long cmax) {
 		return max(min(key, cmax), cmin);
 	}
 };

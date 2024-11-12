@@ -5,33 +5,58 @@
 #include <utility>
 #include <chrono>
 #include <cmath>
+#include <unordered_map>
 //#include "db/datastructures/SparseBTree.h"
 //#include <functional>
 //#include "db/datastructures/MinMaxNodeSerializer.h"
+//#include "db/datastructures/MemoryPool.h"
 
 
-template <typename K, typename V, unsigned int N, bool ASC>
 class MinMaxKey {
 public:
-	K key;
-	V data;
-	class MinMaxKey(K k, V d) : key(k), data(d) {}
+	unsigned long long key;
+	unsigned long long data;
+	class MinMaxKey(unsigned long long k, unsigned long long d) : key(k), data(d) {}
 };
 
 
-template <typename K, typename V, unsigned int N, bool ASC>
+template <unsigned int N>
 class MinMaxNode {
 
-	typedef MinMaxNode<K, V, N, ASC> MMNode;
-	typedef MinMaxKey<K, V, N, ASC> MMKey;
+	typedef MinMaxNode<N> MMNode;
+	typedef MinMaxKey MMKey;
 
-	//used by parents to find specific child node
-	K cmin = 0;
-	K cmax = 0;
+	struct MMRecord {
+		bool leaf = true;
+		//used by parents to find specific child node
+		unsigned long long cmin = 0;
+		unsigned long long cmax = 0;
 
-	//count of all children under this parent
-	// used to determine rank position the specific keys
-	unsigned int span = 0;
+		//size of node array
+		unsigned int size = 0;
+
+		//count of all children under this parent
+		// used to determine rank position the specific keys
+		unsigned int span = 0;
+
+		//for removing a child from parent
+		unsigned int childId = -1;
+
+
+		MMNode** children = nullptr;
+		MMKey** keys = nullptr;
+		
+	} ;
+
+public:
+	
+	//Record to be encoded into database
+	MMRecord* record;
+
+	//------ NOT ENCODED
+
+	//when searching, calculates how many keyvalues are in previous nodes
+	unsigned int tempspan = 0;
 
 	//linked list nodes
 	MMNode* nextNode = nullptr;
@@ -39,115 +64,57 @@ class MinMaxNode {
 
 	//parent node
 	MMNode* parent = nullptr;
-
-	//0 = internal
-	//1 = leaf
-	bool leaf = true;
-	MMNode** children = nullptr;
-	MMKey** keys = nullptr;
-
-	//for removing a child from parent
-	unsigned int childId = -1;
-
-	//when searching, calculates how many keyvalues are in previous nodes
-	unsigned int tempspan = 0;
-
-	//size of data array
-	unsigned int size = 0;
-
 	//size of children array
-	unsigned int chsize = 0;
+	//unsigned int chsize = 0;
 
 	//point where split occurs
-	unsigned int nsplit = 0;
+	//unsigned int nsplit = 0;
+
+	//point where split occurs
+	static inline unsigned int nsplit = floor(N * 0.5);
+	static inline unsigned int nlog2 = 16;// ceil(N / log2(N));
+	static inline unsigned int halfN = N - nsplit;
 
 public:
-	K getMin() { return cmin; };
-	K getMax() { return cmax; };
-	void setMin(K m) { cmin = m; };
-	void setMax(K m) { cmax = m; };
 
-	unsigned int getSpan() { return span; };
-	void setSpan(unsigned int m) { span = m; };
+	MinMaxNode(bool isLeaf) {
 
-	MMNode* getNext() { return nextNode; };
-	MMNode* getPrev() { return prevNode; };
-	void setNext(MMNode* m) { nextNode = m; };
-	void setPrev(MMNode* m) { prevNode = m; };
+		record = new MMRecord();
 
 
-	MMNode* getParent() { return parent; };
-	void setParent(MMNode* m) { parent = m; };
-
-	bool isLeaf() { return leaf; };
-	void setLeaf(bool l) { leaf = l; };
-
-	MMNode** getChildren() { return children; };
-	MMNode* getChild(int index) {
-		if (index >= 0 && index < N)
-			return children[index];
-		return nullptr;
-	}
-	void setChildren(MMNode** m) { children = m; };
-	void setChild(int index, MMNode* m) {
-		if (index >= 0 && index < N)
-			children[index] = m;
-	}
-
-	MMKey** getKeys() { return keys; };
-	MMKey* getKey(int index) {
-		if (index >= 0 && index < N)
-			return keys[index];
-		return nullptr;
-	}
-	void setKeys(MMKey** m) { keys = m; };
-	void setKey(int index, MMKey* m) {
-		if (index >= 0 && index < N)
-			keys[index] = m;
-	}
-
-	unsigned int getChildId() { return childId; };
-	void setChildId(unsigned int m) { childId = m; };
-
-	unsigned int getTempSpan() { return tempspan; };
-	void setTempSpan(unsigned int m) { tempspan = m; };
-
-	unsigned int getKeyCount() { return size; };
-	void setKeyCount(unsigned int m) { size = m; };
-
-	unsigned int getChildrenCount() { return chsize; };
-	void setChildrenCount(unsigned int m) { chsize = m; };
-
-	unsigned int getNSplit() { return nsplit; };
-	void setNSplit(unsigned int m) { nsplit = m; };
-
-
-	MinMaxNode(bool isLeaf) : leaf(isLeaf), nsplit(floor(N * 0.5)) {
+		record->leaf = isLeaf;
 		if (isLeaf) {
-			keys = new MMKey * [N];
+			record->keys = new MMKey * [N];
 		}
 		else {
-			children = new MMNode * [N];
+			record->children = new MMNode * [N];
 		}
 	}
 
 	~MinMaxNode() {
-
-		delete[] keys;
-		delete[] children;
+		if (record->leaf) {
+			for (int i = 0; i < record->size; i++)
+				delete record->keys[i];
+			delete[] record->keys;
+		}
+		else {
+			for (int i = 0; i < record->size; i++)
+				delete record->children[i];
+			delete[] record->children;
+		}
 	}
 
 	void display(int depth = 0) {
 
 		//cout << "=======================" << endl;
-		cout << std::string(depth, '\t') << "Child = " << getMin() << "," << getMax() << " :: " << getSpan() << endl;
+		cout << std::string(depth, '\t') << "Child = " << record->cmin << "," << record->cmax << " :: " << record->span << endl;
 
-		for (int i = 0; i < getKeyCount(); i++) {
-			cout << std::string(depth, '\t') << "\tKey[" << getKey(i)->data << "] = " << getKey(i)->key << endl;
+		for (int i = 0; i < record->size; i++) {
+			cout << std::string(depth, '\t') << "\tKey[" << record->keys[i]->data << "] = " << record->keys[i]->key << endl;
 		}
 
-		for (int i = 0; i < getChildrenCount(); i++) {
-			getChild(i)->display(depth + 1);
+		for (int i = 0; record->leaf && i < record->size; i++) {
+			record->children[i]->display(depth + 1);
 		}
 		//cout << "=======================" << endl;
 	}
@@ -159,98 +126,127 @@ public:
 
 
 
-	MinMaxNode* revsearch(K key, unsigned int count = 0) {
-		int childCount = getChildrenCount();
+	MinMaxNode* revsearch(unsigned long long key) {
 		MMNode* child = nullptr;
-		if (childCount > 0) {
-			int i = 0;
-			if (count == -1) {
-				int logN = log2(N);
-				for (; i < childCount; i+= logN) {
-					if (key <= getChild(i)->getMax()) break;
-				}
-				i = mmClamp(i - logN, 0, childCount - 1);
-				for (; i < childCount; i++) {
-					child = getChild(i);
-					if (key <= child->getMax())
-						break;
-				}
-			}
-			else {
-				for (; i < childCount; i++) {
-					child = getChild(i);
-					if (key <= child->getMax())
-						break;
-					count += child->getSpan();
-				}
-			}
-			if (i >= childCount) i = childCount - 1;
-			return child->revsearch(key, count);
+		if (record->leaf) {
+			return this;
 		}
 
-		setTempSpan(count );
-		//tempspan = (count + 1);
-		return this;
-	}
-
-	MinMaxNode* search(K key, unsigned int count = 0) {
-		int childCount = getChildrenCount();
-		MMNode* child = nullptr;
-		if (childCount > 0) {
-			child = getChild(0);
-			if (key < child->getMin()) {
-				return child->search(key, count);
-			}
-			int i = childCount - 1;
-			if (count == -1) {
-				int logN = log2(N);
-				for (; i >= 0; i-= logN)
-					if (key >= getChild(i)->getMin()) break;
-				i = mmClamp(i + logN, 0, childCount - 1);
-				for (; i >= 0; i--) {
-					child = getChild(i);
-					if (key >= child->getMin())//&& key <= children[i]->cmax)
-						break;
-				}
-			}
-			else {
-				for (; i >= 0; i--) {
-					child = getChild(i);
-					if (key >= child->getMin())//&& key <= children[i]->cmax)
-						break;
-					count += child->getSpan();
-				}
-			}
-			if (i < 0) i = 0;
-			return child->search(key, count);
+		int i = 0;
+		child = record->children[0];
+		if (key <= child->record->cmax) {
+			return child->revsearch(key);
 		}
 
-		MinMaxNode* root = this;
-		while (root->getParent() != nullptr)
-			root = root->getParent();
-
-		setTempSpan(root->getSpan() - (count + getKeyCount()));
-		return this;
+		/*for (; i < childCount; i+= nlog2)
+			if (key <= children[i]->cmax) break;
+		i = mmClamp(i - nlog2, 0, childCount - 1);*/
+		for (; i < record->size; i++) {
+			child = record->children[i];
+			if (key <= child->record->cmax)
+				break;
+		}
+			
+		if (i >= record->size) i = record->size - 1;
+		return child->revsearch(key);
 	}
 
-	MinMaxNode* insert(K key, V data) {
+	MinMaxNode* revsearchWithCount(unsigned long long key, unsigned int count = 0) {
+		MMNode* child = nullptr;
+		if (record->leaf) {
+			tempspan = count;
+			//tempspan = (count + 1);
+			return this;
+		}
+
+		int i = 0;
+
+		child = record->children[0];
+		if (key <= child->record->cmax) {
+			return child->revsearchWithCount(key, count);
+		}
+
+		for (; i < record->size; i++) {
+			child = record->children[i];
+			if (key <= child->record->cmax)
+				break;
+			count += child->record->span;
+		}
+			
+		if (i >= record->size) i = record->size - 1;
+		return child->revsearchWithCount(key, count);
+	}
+
+	MinMaxNode* search(unsigned long long key) {
+		MMNode* child = nullptr;
+		if (record->leaf)
+			return this;
+
+		child = record->children[0];
+		if (key < child->record->cmin) {
+			return child->search(key);
+		}
+		int i = record->size - 1;
+
+		/*for (; i >= 0; i-= nlog2)
+			if (key >= children[i]->cmin) break;
+		i = mmClamp(i + nlog2, 0, childCount - 1);*/
+		for (; i >= 0; i--) {
+			child = record->children[i];
+			if (key >= child->record->cmin)//&& key <= children[i]->cmax)
+				break;
+		}
+		
+		if (i < 0) i = 0;
+		return child->search(key);
+	}
+
+	MinMaxNode* searchWithCount(unsigned long long key, unsigned int count = 0) {
+		MMNode* child = nullptr;
+		if (record->leaf) {
+			MinMaxNode* root = this;
+			while (root->parent != nullptr)
+				root = root->parent;
+
+			tempspan = root->record->span - (count + record->size);
+			return this;
+		}
+
+		child = record->children[0];
+		if (key < child->record->cmin) {
+			return child->searchWithCount(key, count);
+		}
+		int i = record->size - 1;
+			
+		for (; i >= 0; i--) {
+			child = record->children[i];
+			if (key >= child->record->cmin)//&& key <= children[i]->cmax)
+				break;
+			count += child->record->span;
+		}
+
+		if (i < 0) i = 0;
+		return child->searchWithCount(key, count);
+	}
+
+	/*MinMaxNode* insert(K key, V data) {
 		MinMaxNode* node = nullptr;
-		if (ASC) node = search(key, -1);
-		else node = revsearch(key, -1);
+		if (ASC) node = search(key);
+		else node = revsearch(key);
 		return node->insertLeaf(key, data);
-	}
+	}*/
 
 
 
 
-	MinMaxNode* insertLeaf(K key, V d) {
-		unsigned int keyCount = getKeyCount();
+	MinMaxNode* insertLeaf(unsigned long long key, unsigned long long d, bool ASC=true) {
+		unsigned int keyCount = record->size;
 		MMKey* kv = new MMKey(key, d);
 		MMKey* temp = nullptr;
 		//first kv or greater than entire list
-		if (keyCount == 0 || key > getKey(keyCount - 1)->key) {
-			setKey(keyCount, kv);
-			setKeyCount(keyCount + 1);
+		if (keyCount == 0 || key > record->keys[keyCount - 1]->key) {
+			record->keys[keyCount] =  kv;
+			record->size = keyCount + 1;
 			incrementSpan(1);
 			updateMinMaxLeaf();
 		}
@@ -262,11 +258,11 @@ public:
 
 			if (ASC) {
 				for (; i < keyCount; i+= logN)
-					if (key < getKey(i)->key) break;
+					if (key < record->keys[i]->key) break;
 				i = mmClamp(i-logN, 0, keyCount - 1);
 
 				for (; i < keyCount; i++) {
-					temp = getKey(i);
+					temp = record->keys[i];
 					if (key < temp->key) {
 						break;
 					}
@@ -274,39 +270,39 @@ public:
 			}
 			else {
 				for (; i < keyCount; i += logN)
-					if (key <= getKey(i)->key) break;
+					if (key <= record->keys[i]->key) break;
 				i = mmClamp(i - logN, 0, keyCount - 1);
 
 				for (; i < keyCount; i++) {
-					temp = getKey(i);
+					temp = record->keys[i];
 					if (key <= temp->key) {
 						break;
 					}
 				}
 			}
 
-			mmShiftRight(keys, i, keyCount);
-			setKey(i, kv);
-			setKeyCount(keyCount + 1);
+			mmShiftRight(record->keys, i, keyCount);
+			record->keys[i] =  kv;
+			record->size = keyCount + 1;
 			incrementSpan(1);
 			if (i == 0)
 				updateMinMaxLeaf();
 		}
 
 		//reached capacity, split the node
-		if (getKeyCount() == N) {
+		if (record->size == N) {
 			return splitLeaf(); //new root?
 		}
 		else {
 			// old one connected with left, is now connected with new right
-			MinMaxNode* farRight = getNext();
+			MinMaxNode* farRight = nextNode;
 			if (farRight != nullptr)
-				farRight->setPrev(this);
+				farRight->prevNode = this;
 		}
 		return nullptr;
 	}
 
-	int mmClamp(int key, int cmin, int cmax) {
+	inline int mmClamp(int key, int cmin, int cmax) {
 		return max(min(key, cmax), cmin);
 	}
 
@@ -314,17 +310,17 @@ public:
 		if (atIndex == -1)
 			return nullptr;
 
-		node->setParent(this);
+		node->parent = this;
 
-		unsigned int childCount = getChildrenCount();
-		mmShiftRightNode(children, atIndex, childCount);
-		setChild(atIndex, node);
-		node->setChildId(atIndex);
+		unsigned int childCount = record->size;
+		mmShiftRightNode(record->children, atIndex, childCount);
+		record->children[atIndex] =  node;
+		node->record->childId = atIndex;
 		childCount += 1;
-		setChildrenCount(childCount);
+		record->size = childCount;
 		//children[atIndex] = node;
 		//node->childId = atIndex;
-		//chsize++;
+		//size++;
 		updateMinMaxNode();
 
 		//reached capacity, split the node
@@ -336,48 +332,48 @@ public:
 
 	MinMaxNode* splitLeaf() {
 		MinMaxNode* right = new MinMaxNode(true);
-		unsigned int keyCount = getKeyCount();
+		unsigned int keyCount = record->size;
 		for (int i = nsplit, j = 0; i < keyCount; i++) {
-			right->setKey(j++, getKey(i));
+			right->record->keys[j++] = record->keys[i];
 		}
 
 		//remove count entirely from parent tree
 		MinMaxNode* cur = this;
 
 		// update sizes to match moved keys
-		setKeyCount(nsplit);
-		right->setKeyCount(N - nsplit);
+		record->size = nsplit;
+		right->record->size = N - nsplit;
 		decrementSpan(N - nsplit);
 
 		updateMinMaxLeaf();
 		right->updateMinMaxLeaf();
 
 		// old one connected with left, is now connected with new right
-		MinMaxNode* farRight = getNext();
+		MinMaxNode* farRight = nextNode;
 		if (farRight != nullptr)
-			farRight->setPrev(right);
+			farRight->prevNode = right;
 
 		// right is now connected in middle between left and far right
-		right->setNext(farRight);
-		right->setPrev(this);
+		right->nextNode = farRight;
+		right->prevNode = this;
 
 		// left is connected to new right
-		setNext(right);
+		nextNode = right;
 
-		MinMaxNode* p = getParent();
+		MinMaxNode* p = parent;
 
 		if (p == nullptr) {
 			MinMaxNode* newRoot = new MinMaxNode(false);
 			newRoot->insertNode(this, 0);
 			newRoot->insertNode(right, 1);
 			newRoot->incrementSpan(N - nsplit);
-			right->incrementSpan(right->getKeyCount());
+			right->incrementSpan(right->record->size);
 
 			return newRoot;
 		}
 		else {
-			p->insertNode(right, getChildId() + 1);
-			right->incrementSpan(right->getKeyCount());
+			p->insertNode(right, record->childId + 1);
+			right->incrementSpan(right->record->size);
 		}
 	}
 
@@ -386,21 +382,21 @@ public:
 		MinMaxNode* right = new MMNode(false);
 		MinMaxNode* child = nullptr;
 		unsigned int spanMove = 0;
-		unsigned int childCount = getChildrenCount();
+		unsigned int childCount = record->size;
 		int j = 0;
-		for (int i = getNSplit(); i < childCount; i++) {
-			child = getChild(i);
-			child->setChildId(j);
-			child->setParent(right);
-			spanMove += child->getSpan();
-			right->setChild(j, child);
+		for (int i = nsplit; i < childCount; i++) {
+			child = record->children[i];
+			child->record->childId = j;
+			child->parent = right;
+			spanMove += child->record->span;
+			right->record->children[j] =  child;
 			j++;
 		}
 
 		// update sizes to match moved keys
-		setChildrenCount(nsplit);
-		//chsize = nsplit;
-		right->setChildrenCount(N - nsplit);
+		record->size = nsplit;
+		//size = nsplit;
+		right->record->size = N - nsplit;
 
 		decrementSpan(spanMove);
 
@@ -408,31 +404,31 @@ public:
 		right->updateMinMaxNode();
 
 
-		MinMaxNode* p = getParent();
+		MinMaxNode* p = parent;
 
 		if (p == nullptr) {
 			MinMaxNode* newRoot = new MMNode(false);
 			newRoot->insertNode(this, 0);
 			newRoot->insertNode(right, 1);
 			right->incrementSpan(spanMove);
-			newRoot->incrementSpan(getSpan());
+			newRoot->incrementSpan(record->span);
 			return newRoot;
 		}
 		else {
-			p->insertNode(right, getChildId() + 1);
+			p->insertNode(right, record->childId + 1);
 			right->incrementSpan(spanMove);
 		}
 	}
 
-	MinMaxNode* remove(K key, V d) {
+	MinMaxNode* remove(unsigned long long key, unsigned long long d) {
 
 		MinMaxNode* nearest = search(key);
 		MMKey* kv = nullptr;
 
 		int i = 0;
-		unsigned int keyCount = nearest->getKeyCount();
+		unsigned int keyCount = nearest->record->size;
 		for (; i < keyCount; i++) {
-			kv = nearest->getKey(i);
+			kv = nearest->record->keys[i];
 			if (d == kv->data) {
 				break;
 			}
@@ -448,26 +444,26 @@ public:
 			mmShiftLeft(nearestKeys, i, keyCount);
 		}
 		keyCount -= 1;
-		nearest->setKeyCount(keyCount);
+		nearest->record->size = keyCount;
 		//nearest->size--;
 		nearest->decrementSpan(1);
 
 		if (keyCount == 0) {
 			//leaf has no children, update the linked list pointers for leaf nodes
-			MinMaxNode* farRight = nearest->getNext();
-			MinMaxNode* left = nearest->getPrev();
+			MinMaxNode* farRight = nearest->nextNode;
+			MinMaxNode* left = nearest->prevNode;
 
 			if (farRight != nullptr) {
 				if (left != nullptr) {
-					farRight->setPrev(left);
-					left->setNext(farRight);
+					farRight->prevNode = left;
+					left->nextNode = farRight;
 				}
 				else {
-					farRight->setPrev(nullptr);
+					farRight->prevNode = nullptr;
 				}
 			}
 			else if (left != nullptr) {
-				left->setNext(nullptr);
+				left->nextNode = nullptr;
 			}
 
 			//remove this node from tree recursively incase parent is also becomes empty
@@ -479,21 +475,21 @@ public:
 	}
 
 	MinMaxNode* removeNode(MinMaxNode* node) {
-		MinMaxNode* p = node->getParent();
+		MinMaxNode* p = node->parent;
 		if (p == nullptr)
 			return nullptr;
 
-		unsigned int pCount = p->getChildrenCount();
+		unsigned int pCount = p->record->size;
 		if (pCount > 1) {
 			MinMaxNode** parentChildren = p->getChildren();
-			mmShiftLeftNode(parentChildren, node->getChildId(), pCount);
+			mmShiftLeftNode(parentChildren, node->childId, pCount);
 		}
-		//p->chsize--;
+		//p->size--;
 		pCount -= 1;
-		p->setChildrenCount(pCount);
+		p->record->size = pCount;
 		delete node;
 
-		if (pCount == 0 && p->getParent() != nullptr) {
+		if (pCount == 0 && p->parent != nullptr) {
 			removeNode(p);
 		}
 		else {
@@ -502,36 +498,36 @@ public:
 	}
 
 	void updateMinMaxLeaf() {
-		if (getKeyCount() <= 0) return;
+		if (record->size <= 0) return;
 		//from -infinite to +infinite
-		setMin(getKey(0)->key);
-		setMax(getKey(getKeyCount() - 1)->key);
+		record->cmin = record->keys[0]->key;
+		record->cmax = record->keys[record->size - 1]->key;
 
-		if (getParent() != nullptr)
-			getParent()->updateMinMaxNode();
+		if (parent != nullptr)
+			parent->updateMinMaxNode();
 	}
 
 	void updateMinMaxNode() {
-		if (getChildrenCount() <= 0) return;
+		if (record->size <= 0) return;
 		//from -infinite to +infinite
-		setMin(getChild(0)->getMin());
-		setMax(getChild(getChildrenCount() - 1)->getMax());
-		if (getParent() != nullptr)
-			getParent()->updateMinMaxNode();
+		record->cmin = (record->children[0]->record->cmin);
+		record->cmax = (record->children[record->size - 1]->record->cmax);
+		if (parent != nullptr)
+			parent->updateMinMaxNode();
 	}
 
 	void incrementSpan(unsigned int count) {
-		setSpan(getSpan() + count);
+		record->span = record->span + count;
 		//span += count;
-		if (getParent() != nullptr)
-			getParent()->incrementSpan(count);
+		if (parent != nullptr)
+			parent->incrementSpan(count);
 	}
 
 	void decrementSpan(unsigned int count) {
-		if (count > getSpan()) setSpan(0);
-		else setSpan(getSpan() - count);
-		if (getParent() != nullptr)
-			getParent()->decrementSpan(count);
+		if (count > record->span) record->span = 0;
+		else record->span = record->span - count;
+		if (parent != nullptr)
+			parent->decrementSpan(count);
 	}
 
 	void mmShiftRight(MMKey** arr, int i, unsigned int size) {
@@ -548,14 +544,14 @@ public:
 
 	void mmShiftRightNode(MinMaxNode** arr, int i, unsigned int size) {
 		for (int idx = size - 1; idx >= i; idx--) {
-			arr[idx]->setChildId(idx + 1);
+			arr[idx]->record->childId = idx + 1;
 			arr[idx + 1] = arr[idx];
 		}
 	}
 
 	void mmShiftLeftNode(MinMaxNode** arr, int i, unsigned int size) {
 		for (; i < size - 1; i++) {
-			arr[i + 1]->setChildId(i);
+			arr[i + 1]->record->childId = i;
 			arr[i] = arr[i + 1];
 		}
 	}
