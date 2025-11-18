@@ -119,7 +119,7 @@ int main()
 						<< std::get<0>(rank) 
 						<< "]: score="
 						<< std::get<1>(rank)
-						<< ": value="
+						<< ": id="
 						<< std::get<2>(rank)
 						<< endl;
 				}
@@ -169,7 +169,7 @@ int main()
 						<< std::get<0>(rank)
 						<< "]: score="
 						<< std::get<1>(rank)
-						<< ": value="
+						<< ": id="
 						<< std::get<2>(rank)
 						<< endl;
 				}
