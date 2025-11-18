@@ -1,0 +1,3 @@
+D:/GitHub/MovStat/CMakeFiles/MovStat.dir
+D:/GitHub/MovStat/CMakeFiles/ALL_BUILD.dir
+D:/GitHub/MovStat/CMakeFiles/ZERO_CHECK.dir

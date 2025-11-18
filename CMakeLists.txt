@@ -10,6 +10,12 @@ add_executable (MovStat src/MovStat.cc src/db/datastructures/BTree.h src/db/data
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(Boost_USE_STATIC_LIBS ON)
+set (BOOST_ROOT "D:\\boost\\boost_1_89_0")
+set (BOOST_LIBRARYDIR  "D:\\boost\\boost_1_89_0\\libs")
+set (BOOST_INCLUDEDIR  "D:\\boost\\boost_1_89_0")
+set (Boost_DEBUG ON)
+
 if (CMAKE_VERSION VERSION_GREATER 3.28)
   set_property(TARGET MovStat PROPERTY CXX_STANDARD 20)
 endif()
@@ -24,15 +30,13 @@ include_directories(
     src/db
     src/db/datastructures
     src/db/tables
-    ${Boost_INCLUDE_DIR}
+    ${BOOST_INCLUDEDIR}
     libs/BTree/include
 )
 
 
-set(BOOST_REQUIRED_COMPONENTS
-    filesystem
-    iostreams
-)
+
+
 set(BOOST_MIN_VERSION 1.74.0) # or whatever you need!
 # Here you can either append or set a root to look into
 # In general, **don't do that**! Your boost build and installation
@@ -44,13 +48,8 @@ find_package(
     Boost ${BOOST_MIN_VERSION} REQUIRED
     COMPONENTS filesystem iostreams
 )
-target_link_libraries(MovStat
-    PRIVATE
-    Boost::filesystem
-    Boost::iostreams
-    Boost::boost
-)
-#target_include_directories(KineticStatDB SYSTEM PRIVATE ${Boost_INCLUDE_DIR})
+
+#target_include_directories(KineticStatDB SYSTEM PRIVATE ${BOOST_INCLUDEDIR})
 
 #find_package(BTree)
 #target_link_libraries(MovStat PRIVATE BTree)
