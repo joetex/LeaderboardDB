@@ -56,7 +56,7 @@ int randint(int min, int max) {
 unsigned int totalTreeNodes = 0;
 int main()
 {
-	cout << "LeStatDB v1.0 Started built using c++ " << __cplusplus << endl;
+	cout << "=== LeaderboardDB v1.0 === " << endl;
 
 	srand(10);
 
@@ -84,8 +84,8 @@ int main()
 
 			//for (int i = 0; i <= insertTotal; i++) {
 				for (int i = insertTotal; i >= 0; i--) {
-				//inserted.push_back(i);// dist6(mt));
-				inserted.push_back( dist6(mt));
+				inserted.push_back(i);// dist6(mt));
+				//inserted.push_back( dist6(mt));
 			}
 				insertTotal = inserted.size();
 		auto start = chrono::high_resolution_clock::now();
@@ -109,7 +109,9 @@ int main()
 			int findValue = 0;
 			int findCount = 10;
 			std::ostringstream os;
-			for (int j=0; j < 100000; j++) {
+
+			cout << "Show top ranks, lower is better \n";
+			//for (int j=0; j < 100000; j++) {
 			std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks = minmax.range(findValue, findCount);
 				for (std::tuple<unsigned int, unsigned long long, unsigned long long> rank : ranks) {
 					
@@ -121,11 +123,17 @@ int main()
 						<< std::get<2>(rank)
 						<< endl;
 				}
-			}
+			//}
 			auto finish = chrono::high_resolution_clock::now();
-			//cout << os.str();
+			cout << os.str();
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}
+
+
+
+		cout << "===================== " << endl;
+
+
 
 		typedef MinMaxTree<128, false> MMSortDesc;
 
@@ -151,7 +159,10 @@ int main()
 		{
 			int findValue = insertTotal;
 			int findCount = 10;
-			for (int j = 0; j < 1; j++) {
+
+			cout << "Show top ranks, higher is better \n";
+
+			//for (int j = 0; j < 1; j++) {
 				std::vector<std::tuple<unsigned int, unsigned long long, unsigned long long>> ranks = minmaxd.revrange(findValue, findCount);
 				for (std::tuple<unsigned int, unsigned long long, unsigned long long> rank : ranks) {
 					cout << "Rank ["
@@ -162,7 +173,7 @@ int main()
 						<< std::get<2>(rank)
 						<< endl;
 				}
-			}
+			//}
 			auto finish = chrono::high_resolution_clock::now();
 			cout << "Iterate MinMax " << findCount << ": " << chrono::duration_cast<chrono::milliseconds>(finish - start).count() << "ms\n";
 		}

@@ -2,13 +2,42 @@
 # project specific logic here.
 #
 cmake_minimum_required(VERSION 3.28)
-project(MovStat)
+project(KineticStatDB)
 
 # Add source to this project's executable.
-add_executable (MovStat src/MovStat.cc "src/db/datastructures/unused/BTree.h" "src/db/datastructures/ska_flat_hash_map.h" "src/db/datastructures/unused/SkipList.h" src/cmdline/CommandLoop.h src/cmdline/CommandLoop.cc src/db/actions/ZADD.h src/db/actions/IAction.h src/db/actions/ActionSystem.h src/db/MemoryDB.h src/db/tables/Member.h src/db/tables/Stat.h src/db/tables/Leaderboard.h "src/db/Engine.h" "src/db/datastructures/unused/HashTree.h" "src/db/datastructures/Base62.h" "src/db/Pager.h" "src/db/datastructures/json.h" "src/db/FileDiskManager.h" "src/db/datastructures/unused/MinMaxSort.h" "src/db/datastructures/MinMaxTree.h" "src/db/datastructures/MemoryPool.h")
+add_executable (
+    MovStat src/MovStat.cc  
+    src/db/datastructures/ska_flat_hash_map.h 
+    src/cmdline/CommandLoop.h 
+    src/cmdline/CommandLoop.cc 
+    src/db/actions/ZADD.h 
+    src/db/actions/IAction.h 
+    src/db/actions/ActionSystem.h 
+    src/db/MemoryDB.h 
+    src/db/tables/Member.h 
+    src/db/tables/Stat.h 
+    src/db/tables/Leaderboard.h 
+    "src/db/Engine.h" 
+    #"src/db/datastructures/HashTree.h" 
+   # "src/db/datastructures/Base62.h" 
+    "src/db/Pager.h" 
+    "src/db/datastructures/json.h" 
+    "src/db/FileDiskManager.h" 
+    "src/db/datastructures/MinMaxNode.h" 
+    "src/db/datastructures/MinMaxTree.h"
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(Boost_USE_STATIC_LIBS ON)
+set (BOOST_ROOT "D:/boost/boost_1_89_0")
+set (BOOST_LIBRARYDIR "D:/boost/boost_1_89_0/lib64-msvc-14.3")
+set (BOOST_INCLUDEDIR "D:/boost/boost_1_89_0")
+set (Boost_DEBUG ON)
+set (Boost_VERBOSE ON)
+set(BOOST_ENABLE_CMAKE ON)
+set(Boost_COMPILER -vc143)
 
 if (CMAKE_VERSION VERSION_GREATER 3.28)
   set_property(TARGET MovStat PROPERTY CXX_STANDARD 20)
@@ -24,16 +53,18 @@ include_directories(
     src/db
     src/db/datastructures
     src/db/tables
-    ${Boost_INCLUDE_DIR}
+    ${BOOST_INCLUDEDIR}
     libs/BTree/include
 )
+
 
 
 set(BOOST_REQUIRED_COMPONENTS
     filesystem
     iostreams
 )
-set(BOOST_MIN_VERSION 1.86.0) # or whatever you need!
+
+set(BOOST_MIN_VERSION 1.74.0) # or whatever you need!
 # Here you can either append or set a root to look into
 # In general, **don't do that**! Your boost build and installation
 # should come with the correct CMake configure scripts to automate this!
@@ -44,13 +75,15 @@ find_package(
     Boost ${BOOST_MIN_VERSION} REQUIRED
     COMPONENTS filesystem iostreams
 )
+
 target_link_libraries(MovStat
     PRIVATE
     Boost::filesystem
     Boost::iostreams
-    Boost::boost
+    #Boost::boost
 )
-#target_include_directories(KineticStatDB SYSTEM PRIVATE ${Boost_INCLUDE_DIR})
+
+#target_include_directories(KineticStatDB SYSTEM PRIVATE ${BOOST_INCLUDEDIR})
 
 #find_package(BTree)
 #target_link_libraries(MovStat PRIVATE BTree)
