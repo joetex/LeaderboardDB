@@ -11,10 +11,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Boost_USE_STATIC_LIBS ON)
-set (BOOST_ROOT "D:\\boost\\boost_1_89_0")
-set (BOOST_LIBRARYDIR  "D:\\boost\\boost_1_89_0\\libs")
-set (BOOST_INCLUDEDIR  "D:\\boost\\boost_1_89_0")
+set (BOOST_ROOT "D:/boost/boost_1_89_0")
+set (BOOST_LIBRARYDIR "D:/boost/boost_1_89_0/lib64-msvc-14.3")
+set (BOOST_INCLUDEDIR "D:/boost/boost_1_89_0")
 set (Boost_DEBUG ON)
+set (Boost_VERBOSE ON)
+set(BOOST_ENABLE_CMAKE ON)
+set(Boost_COMPILER -vc143)
 
 if (CMAKE_VERSION VERSION_GREATER 3.28)
   set_property(TARGET MovStat PROPERTY CXX_STANDARD 20)
@@ -36,6 +39,10 @@ include_directories(
 
 
 
+set(BOOST_REQUIRED_COMPONENTS
+    filesystem
+    iostreams
+)
 
 set(BOOST_MIN_VERSION 1.74.0) # or whatever you need!
 # Here you can either append or set a root to look into
@@ -47,6 +54,13 @@ set(BOOST_MIN_VERSION 1.74.0) # or whatever you need!
 find_package(
     Boost ${BOOST_MIN_VERSION} REQUIRED
     COMPONENTS filesystem iostreams
+)
+
+target_link_libraries(MovStat
+    PRIVATE
+    Boost::filesystem
+    Boost::iostreams
+    #Boost::boost
 )
 
 #target_include_directories(KineticStatDB SYSTEM PRIVATE ${BOOST_INCLUDEDIR})

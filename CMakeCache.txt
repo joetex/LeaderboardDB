@@ -14,44 +14,38 @@
 # EXTERNAL cache entries
 ########################
 
-//No help, variable specified on the command line.
-BOOST_LIBRARYDIR:PATH=D:\boost\boost_1_89_0
-
-//No help, variable specified on the command line.
-BOOST_ROOT:PATH=D:\boost\boost_1_89_0
-
 //The directory containing a CMake configuration file for Boost.
 Boost_DIR:PATH=Boost_DIR-NOTFOUND
 
 //Boost filesystem library (debug)
-Boost_FILESYSTEM_LIBRARY_DEBUG:FILEPATH=Boost_FILESYSTEM_LIBRARY_DEBUG-NOTFOUND
+Boost_FILESYSTEM_LIBRARY_DEBUG:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_filesystem-vc143-mt-gd-x64-1_89.lib
 
 //Boost filesystem library (release)
-Boost_FILESYSTEM_LIBRARY_RELEASE:FILEPATH=Boost_FILESYSTEM_LIBRARY_RELEASE-NOTFOUND
+Boost_FILESYSTEM_LIBRARY_RELEASE:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_filesystem-vc143-mt-x64-1_89.lib
 
 //Path to a file.
 Boost_INCLUDE_DIR:PATH=D:/boost/boost_1_89_0
 
 //Boost iostreams library (debug)
-Boost_IOSTREAMS_LIBRARY_DEBUG:FILEPATH=Boost_IOSTREAMS_LIBRARY_DEBUG-NOTFOUND
+Boost_IOSTREAMS_LIBRARY_DEBUG:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_iostreams-vc143-mt-gd-x64-1_89.lib
 
 //Boost iostreams library (release)
-Boost_IOSTREAMS_LIBRARY_RELEASE:FILEPATH=Boost_IOSTREAMS_LIBRARY_RELEASE-NOTFOUND
+Boost_IOSTREAMS_LIBRARY_RELEASE:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_iostreams-vc143-mt-x64-1_89.lib
 
-//No help, variable specified on the command line.
-Boost_NO_BOOST_CMAKE:UNINITIALIZED=ON
+//Boost library directory DEBUG
+Boost_LIBRARY_DIR_DEBUG:PATH=D:/boost/boost_1_89_0/lib64-msvc-14.3
+
+//Boost library directory RELEASE
+Boost_LIBRARY_DIR_RELEASE:PATH=D:/boost/boost_1_89_0/lib64-msvc-14.3
 
 //Boost regex library (debug)
-Boost_REGEX_LIBRARY_DEBUG:FILEPATH=Boost_REGEX_LIBRARY_DEBUG-NOTFOUND
+Boost_REGEX_LIBRARY_DEBUG:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_regex-vc143-mt-gd-x64-1_89.lib
 
 //Boost regex library (release)
-Boost_REGEX_LIBRARY_RELEASE:FILEPATH=Boost_REGEX_LIBRARY_RELEASE-NOTFOUND
-
-//No help, variable specified on the command line.
-Boost_USE_STATIC_LIBS:UNINITIALIZED=OFF
+Boost_REGEX_LIBRARY_RELEASE:FILEPATH=D:/boost/boost_1_89_0/lib64-msvc-14.3/libboost_regex-vc143-mt-x64-1_89.lib
 
 //Path to a program.
-CMAKE_AR:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib.exe
+CMAKE_AR:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib.exe
 
 //Semicolon separated list of supported configuration types, only
 // supports Debug, Release, MinSizeRel, and RelWithDebInfo, anything
@@ -116,7 +110,7 @@ CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=D:/GitHub/MovStat/CMakeFiles/pkgRedirect
 CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/KineticStatDB
 
 //Path to a program.
-CMAKE_LINKER:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/link.exe
+CMAKE_LINKER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/link.exe
 
 //Flags used by the linker during the creation of modules during
 // all build types.
@@ -139,7 +133,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=/INCREMENTAL:NO
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=/debug /INCREMENTAL
 
 //Path to a program.
-CMAKE_MT:FILEPATH=CMAKE_MT-NOTFOUND
+CMAKE_MT:FILEPATH=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x86/mt.exe
 
 //Value Computed by CMake
 CMAKE_PROJECT_COMPAT_VERSION:STATIC=
@@ -157,7 +151,7 @@ CMAKE_PROJECT_NAME:STATIC=KineticStatDB
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
 
 //RC compiler
-CMAKE_RC_COMPILER:FILEPATH=rc
+CMAKE_RC_COMPILER:FILEPATH=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x86/rc.exe
 
 //Flags for Windows Resource Compiler during all build types.
 CMAKE_RC_FLAGS:STRING=-DWIN32
@@ -241,20 +235,22 @@ KineticStatDB_SOURCE_DIR:STATIC=D:/GitHub/MovStat
 # INTERNAL cache entries
 ########################
 
-//ADVANCED property for variable: BOOST_LIBRARYDIR
-BOOST_LIBRARYDIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: BOOST_ROOT
-BOOST_ROOT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_DIR
 Boost_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_FILESYSTEM_LIBRARY_DEBUG
 Boost_FILESYSTEM_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_FILESYSTEM_LIBRARY_RELEASE
 Boost_FILESYSTEM_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_INCLUDE_DIR
+Boost_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_IOSTREAMS_LIBRARY_DEBUG
 Boost_IOSTREAMS_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_IOSTREAMS_LIBRARY_RELEASE
 Boost_IOSTREAMS_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_LIBRARY_DIR_DEBUG
+Boost_LIBRARY_DIR_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_LIBRARY_DIR_RELEASE
+Boost_LIBRARY_DIR_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_REGEX_LIBRARY_DEBUG
 Boost_REGEX_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Boost_REGEX_LIBRARY_RELEASE
@@ -316,7 +312,7 @@ CMAKE_EXTRA_GENERATOR:INTERNAL=
 //Name of generator.
 CMAKE_GENERATOR:INTERNAL=Visual Studio 17 2022
 //Generator instance identifier.
-CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools
+CMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files/Microsoft Visual Studio/2022/Community
 //Name of generator platform.
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
@@ -388,15 +384,23 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[D:/boost/boost_1_89_0][ ][v1.89.0(1.74.0)]
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[D:/boost/boost_1_89_0][found components: filesystem iostreams regex ][v1.89.0(1.74.0)]
+//Last used BOOST_INCLUDEDIR value.
+_BOOST_INCLUDEDIR_LAST:INTERNAL=D:/boost/boost_1_89_0
 //Last used BOOST_LIBRARYDIR value.
-_BOOST_LIBRARYDIR_LAST:INTERNAL=D:\boost\boost_1_89_0
+_BOOST_LIBRARYDIR_LAST:INTERNAL=D:/boost/boost_1_89_0/lib64-msvc-14.3
 //Last used BOOST_ROOT value.
-_BOOST_ROOT_LAST:INTERNAL=D:\boost\boost_1_89_0
+_BOOST_ROOT_LAST:INTERNAL=D:/boost/boost_1_89_0
+//Last used Boost_COMPILER value.
+_Boost_COMPILER_LAST:INTERNAL=-vc143
 //Components requested for this build tree.
-_Boost_COMPONENTS_SEARCHED:INTERNAL=
+_Boost_COMPONENTS_SEARCHED:INTERNAL=filesystem;iostreams;regex
 //Last used Boost_INCLUDE_DIR value.
 _Boost_INCLUDE_DIR_LAST:INTERNAL=D:/boost/boost_1_89_0
+//Last used Boost_LIBRARY_DIR_DEBUG value.
+_Boost_LIBRARY_DIR_DEBUG_LAST:INTERNAL=D:/boost/boost_1_89_0/lib64-msvc-14.3
+//Last used Boost_LIBRARY_DIR_RELEASE value.
+_Boost_LIBRARY_DIR_RELEASE_LAST:INTERNAL=D:/boost/boost_1_89_0/lib64-msvc-14.3
 //Last used Boost_NAMESPACE value.
 _Boost_NAMESPACE_LAST:INTERNAL=boost
 //Last used Boost_USE_MULTITHREADED value.
