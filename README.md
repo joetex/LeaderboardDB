@@ -15,7 +15,7 @@ This was inspired by Redis Skiplist for Sorted Sets, but I wanted something that
 #### Todo
 - Optimize the MinMaxTree to serialize into filesystem storage
 - Reduce node memory
-- Improve searching through lists inside a children or node to find score in O(log N)
+- Improve searching through lists inside a leaf or node to find score in O(log N)
 
 #### Sample Output
 
