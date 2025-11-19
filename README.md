@@ -58,6 +58,6 @@ This is a thought experiment to make a faster statistics based database.
 
 Advanced leaderboards need to track more than just rank.  
 They need a history of rank movement, direct access to full metadata of owner, timestamps, and more.  
-We should be able to slice subsets of ranks by different metrics like time windows or metadata from the owners (i.e. Country, Race, etc)
+We should be able to slice subsets of ranks by different metrics like time windows or metadata from the owners (i.e. Country, Age, etc)
 
 Traditional relational databases can do these things, but ranking is not optimized on BTree at all.  Storage is cheap, so data redudancy or duplication is part of the plan.
