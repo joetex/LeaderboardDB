@@ -1,5 +1,5 @@
 # LeaderboardDB
-MinMaxBTree, an modified B+Tree that tracks rank of a score. 
+MinMaxBTree, a modified B+Tree that tracks rank of a score. 
 
 See [MinMaxTree.h](https://github.com/joetex/LeaderboardDB/blob/main/src/db/datastructures/MinMaxTree.h) and [MinMaxNode.h](https://github.com/joetex/LeaderboardDB/blob/main/src/db/datastructures/MinMaxNode.h)
 
