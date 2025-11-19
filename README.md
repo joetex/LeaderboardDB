@@ -3,8 +3,7 @@ MinMaxBTree, a modified B+Tree that tracks rank of a score.
 
 See [MinMaxTree.h](https://github.com/joetex/LeaderboardDB/blob/main/src/db/datastructures/MinMaxTree.h) and [MinMaxNode.h](https://github.com/joetex/LeaderboardDB/blob/main/src/db/datastructures/MinMaxNode.h)
 
-<img width="1212" height="719" alt="image" src="https://github.com/user-attachments/assets/fab43c44-c7a1-4927-b2a6-80489ef3a6a8" />
-
+<img width="1250" height="730" alt="image" src="https://github.com/user-attachments/assets/390952fe-d51c-4dcd-bc8c-ec1d53170b22" />
 
 This was inspired by Redis Skiplist for Sorted Sets, but I wanted something that fits into filesystem better.  
 
