@@ -50,3 +50,14 @@ Rank [9]: score=999992: id=8
 Rank [10]: score=999991: id=9
 Iterate MinMax 10: 2ms
 ```
+
+
+### More Information
+
+This is a thought experiment to make a faster statistics based database.  
+
+Advanced leaderboards need to track more than just rank.  
+They need a history of rank movement, direct access to full metadata of owner, timestamps, and more.  
+We should be able to slice subsets of ranks by different metrics like time windows or metadata from the owners (i.e. Country, Race, etc)
+
+Traditional relational databases can do these things, but ranking is not optimized on BTree at all.  Storage is cheap, so data redudancy or duplication is part of the plan.
